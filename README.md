@@ -110,12 +110,14 @@ npm run smoke      # uji end-to-end di browser asli (butuh Chrome/Edge terpasang
 ```
 
 `npm run smoke` memakai `playwright-core` dengan browser Chrome/Edge yang sudah ada di sistem
-(tidak mengunduh browser). Hasilnya: 26 pemeriksaan (render, manifest, service worker, anti-zoom
+(tidak mengunduh browser). Hasilnya: 32 pemeriksaan (render, manifest, service worker, anti-zoom
 double tap, halaman terkunci + panel isi yang menggulir, tab bar tidak bergeser saat pindah tab,
-latar tab bar tetap menutup jalur di bawahnya + warna kanvas/manifest menyatu, tab baru selalu
+**pita bawah**: geometri iOS standalone ditiru lalu warna pitanya dibandingkan dengan warna tepi
+tab bar langsung dari piksel screenshot — termasuk kontrol yang sengaja bisa gagal, panel
+`?debug=1` + tombol "Uji kanvas", tab baru selalu
 mulai dari atas, kalkulasi, localStorage, posisi toast, kredit developer, tab
 voucher/riwayat, persistensi setelah reload) dan screenshot ke `tmp/` (`smoke-kalkulator.png`,
-`smoke-kredit.png`, `smoke-riwayat.png`, `smoke-voucher.png`).
+`smoke-kredit.png`, `smoke-riwayat.png`, `smoke-voucher.png`, `pita-*.png`).
 
 ```bash
 npm run icons      # regenerate public/icons/*.png dan public/favicon-64.png
@@ -146,10 +148,11 @@ otomatis pada muat ulang berikutnya.
   (`cocoa`, `gold`, `leaf` + utilitas `emboss`, `plate-gold`, `flyer`, `chip`).
 - **PWA**: `vite-plugin-pwa` (workbox `generateSW`, `navigateFallback: /index.html`) sehingga
   deep link tetap jalan saat offline. Hanya `npm run build` yang menyalakan service worker.
-  `background_color` manifest disamakan dengan tepi bawah tab bar (`#1c0e07`) karena di iOS PWA
-  standalone warna itu juga dipakai untuk pita di bawah area halaman. WebKit menyimpan manifest
-  saat ikon dipasang, jadi kalau nilai ini diubah, hapus lalu pasang ulang ikon
-  "Tambahkan ke Layar Utama" supaya perubahannya ikut terpakai (bagian CSS-nya langsung jalan).
+  `background_color` manifest disamakan dengan tepi bawah tab bar (`#1c0e07`) supaya pita yang
+  mungkin dilukis **sistem** (di luar jangkauan CSS) di bawah area halaman ikut berwarna sama.
+  WebKit menyimpan manifest saat ikon dipasang, jadi kalau nilai ini diubah, hapus lalu pasang
+  ulang ikon "Tambahkan ke Layar Utama" supaya perubahannya ikut terpakai (bagian CSS-nya langsung
+  jalan).
 - **Gestur**: `touch-action: manipulation` dipasang di `html`, `body`, dan kontrol form supaya
   **double tap tidak men-zoom**. Sesuai spesifikasi, browser meng-intersect `touch-action` elemen
   yang disentuh dengan leluhurnya, jadi cukup di elemen teratas. Pinch zoom sengaja dibiarkan
@@ -163,18 +166,23 @@ otomatis pada muat ulang berikutnya.
   juga meng-clamp posisi gulir halaman sehingga toolbar beranimasi lagi. Dengan halaman terkunci,
   toolbar tidak punya alasan berubah, jadi tab bar (`fixed bottom-0`, selebar `max-w-md` di
   tengah) tetap diam. Tab bar sengaja dibiarkan `fixed`, bukan `sticky` di dalam aliran shell:
-  tepi bawah layout viewport di iOS bisa berhenti ± 34px di atas dasar layar (pita home
-  indicator), sehingga elemen yang mengalir di dalam shell tampak "mengambang". Elemen `fixed`
-  dijangkar ke tepi yang paling bawah yang dicapai layout, jadi supaya bar-nya tetap terlihat
-  menempel ke dasar layar ada dua jaring pengaman:
-  1. `.tabbar::after` memperpanjang latar bar ke bawah melewati kotaknya (± 8rem) — jalur kosong
-     di bawah bar masih bagian kanvas halaman, jadi bisa ditutup latar bar itu sendiri (kalau bar
-     sudah menempel dasar layar, bagian ini terpotong tepi layar dan tidak terlihat);
-  2. warnanya disamakan — gradasi tab bar sengaja berakhir di `#251309` supaya setelah lapisan
-     gelap `rgba(0, 0, 0, 0.25)` tepinya tampil tepat `#1c0e07`, sama dengan `background-color`
-     `body` **dan** `background_color` manifest. Apa pun yang muncul di bawah bar (kanvas halaman
-     atau pita yang dilukis sistem di PWA standalone) jadi berwarna sama dan tidak meninggalkan
-     garis.
+  `fixed` dijangkarkan ke tepi paling bawah yang dicapai layout.
+  **Pita bawah di iOS standalone** (terukur di iPhone XR lewat panel diagnostik): layar 896px,
+  `innerHeight`/`100dvh` 848px, `100vh` 896px — konten digambar dari paling atas layar, tapi kotak
+  dokumen berhenti setinggi status bar (48px) di atas dasar layar, dan tab bar menempel dasar kotak
+  itu. Jalur 48px sisanya **dilukis kanvas halaman**; karena `html` dulu tanpa latar, latar `body`
+  ikut dipropagasikan ke kanvas dan lapisan gradasinya (ukuran = kotak body) terulang di situ —
+  pita cokelat terang yang membuat tab bar terlihat mengambang. Perbaikannya dua jaring:
+  1. `html` diberi latar rata `#1c0e07` + `var(--noise)` yang sama seperti tab bar, jadi kanvas di
+     bawah kotak dokumen tampil sewarna tepi bawah bar — diuji lewat piksel screenshot di
+     `npm run smoke`, dan di browser biasa jalur ini memang tidak terlihat;
+  2. `body` memakai `background-repeat: no-repeat`, sehingga lapisan gradasinya tidak akan pernah
+     terulang di jalur itu walaupun latar `html` hilang/tertimpa.
+  Gradasi tab bar sengaja berakhir di `#251309` supaya setelah lapisan gelap `rgba(0, 0, 0, 0.25)`
+  tepinya tampil `#1c0e07` — sama dengan `background-color` `body`, kanvas `html`, dan
+  `background_color` manifest. Selubung `.tabbar::after` yang dulu dipakai untuk kasus ini sudah
+  **dihapus**: elemen `fixed` di iOS terpotong tepat di tepi layout viewport (tempat bar menempel),
+  jadi apa pun yang digambar di bawahnya tidak pernah terlihat.
   Detail yang menyertainya: setiap ganti tab `main.scrollTop` direset lewat
   `$effect` (tab baru selalu mulai dari atas), padding bawah panel isi
   `calc(10rem + env(safe-area-inset-bottom))` — cukup untuk bar total 68px + tab bar 76px, dan
@@ -182,11 +190,16 @@ otomatis pada muat ulang berikutnya.
   fixed` dihapus (halaman tidak digulir lagi), dan batas tinggi sheet rincian pakai `dvh` (`.sheet-max`).
 - **Diagnostik viewport**: buka aplikasi dengan `?debug=1` (mis. `https://<domain>/?debug=1`) untuk
   memaksa panel angka `innerHeight`, `visualViewport`, `100dvh`/`100vh`, `env(safe-area-inset-*)`,
-  `jarak ke visualViewport`, `selisih layar − innerHeight`, serta posisi shell & tab bar. Panel ini
+  `jarak ke visualViewport`, `selisih layar − innerHeight`, `kanvas html`, serta posisi shell & tab
+  bar. Panel ini
   **juga menyala sendiri** kalau `selisihViewport()` di `App.svelte` mengukur layout meleset > 2px
   dari layar (tab bar tidak menempel dasar viewport, area terlihat lebih pendek, atau di mode
   standalone layar lebih tinggi dari viewport) — jadi angkanya bisa dibaca langsung dari PWA yang
-  sudah terpasang, karena ikon di layar utama tidak bisa dibuka dengan query tambahan. Tekan
+  sudah terpasang, karena ikon di layar utama tidak bisa dibuka dengan query tambahan. Tombol
+  **Uji kanvas** mengecat kanvas `html` magenta: kalau pita di bawah tab bar ikut magenta, pita itu
+  memang kanvas halaman (perbaikan warna kanvas berlaku); kalau tetap gelap, pita itu dilukis sistem
+  di luar halaman dan yang menyamakannya adalah `background_color` manifest (perlu pasang ulang
+  ikon). Tekan
   **Salin** untuk menyalin semua baris, atau **Tutup** (panel tidak muncul lagi di sesi itu).
   Dipakai kalau tab bar terlihat mengambang di iPhone. Kalau tidak diperlukan lagi, hapus
   `src/components/ViewportDebug.svelte` beserta pemakaiannya di `App.svelte`.

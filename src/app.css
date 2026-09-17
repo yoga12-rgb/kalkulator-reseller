@@ -53,6 +53,26 @@ body {
 }
 
 /* ------------------------------------------------------------------
+   Kanvas halaman (area di luar kotak dokumen)
+
+   Di iOS PWA standalone (`black-translucent`) konten digambar dari paling atas
+   layar, tapi `html`/`body` berhenti setinggi status bar (±48px) di atas dasar
+   layar — di iPhone XR: layar 896px, `innerHeight`/`100dvh` 848px, `100vh` 896px.
+   Jalur sisa di bawah kotak dokumen itu dilukis *kanvas*: kalau `html` tidak punya
+   latar, latar `body` ikut dipropagasikan ke kanvas dan lapisan gradasinya
+   (ukurannya = kotak body, ±848px) **terulang** di situ — pita terang yang bikin
+   tab bar terlihat mengambang.
+
+   Karena itu kanvas di sini dibuat rata: warna tepi bawah tab bar (#1c0e07) +
+   noise yang sama seperti tab bar, jadi tepi bawah bar menyatu dengan dasar layar
+   di semua perangkat (iOS maupun browser biasa, yang tidak melihat jalur ini).
+   ------------------------------------------------------------------ */
+html {
+  background-color: #1c0e07;
+  background-image: var(--noise);
+}
+
+/* ------------------------------------------------------------------
    App shell: hanya panel isi (<main>) yang menggulir, halaman tidak.
 
    Di iPhone tinggi `100%`/`vh` tidak sama dengan area yang benar-benar
@@ -83,11 +103,13 @@ body {
   margin: 0;
   font-family: var(--font-body);
   color: var(--color-paper-100);
-  /* Warna kanvas = warna tepi bawah tab bar (#1c0e07). Di iOS tepi bawah area yang
-     bisa dicapai layout kadang berhenti ±34px di atas dasar layar (pita home
-     indicator); area sisa di bawah kotak halaman itu diwarnai kanvas, jadi dengan
-     warna yang sama tab bar tidak terlihat "mengambang" di atas jalur berbeda. */
+  /* Warna dasar halaman = warna tepi bawah tab bar (#1c0e07), sama dengan kanvas
+     `html` (lihat aturan `html` di atas) dan `background_color` manifest. */
   background-color: #1c0e07;
+  /* Lapisan gradasi di bawah ini berukuran kotak body. `no-repeat` menahan lapisan
+     itu supaya tidak pernah terulang di jalur kanvas (kasus iOS di atas) — jaring
+     kedua kalau suatu saat latar `html` hilang/tertimpa. */
+  background-repeat: no-repeat;
   background-image:
     var(--noise),
     radial-gradient(120% 70% at 50% -10%, rgba(255, 214, 124, 0.18), transparent 62%),
@@ -460,21 +482,11 @@ input[type='number'] {
     border-top: 1px solid rgba(255, 214, 124, 0.22);
     box-shadow: 0 -12px 24px -16px rgba(0, 0, 0, 1), inset 0 1px 0 rgba(255, 255, 255, 0.12);
   }
-  /* Selubung bawah: latar tab bar diperpanjang ke bawah melewati kotaknya.
-     Elemen `fixed` hanya bisa menempel sampai tepi bawah yang dicapai layout
-     (±34px di atas dasar layar di iOS), sementara jalur di bawahnya masih bagian
-     kanvas halaman — dulu di situlah tab bar tampak mengambang. Selubung ini
-     menutup jalur tersebut dengan warna yang sama; kalau tab bar sudah menempel
-     dasar layar, bagian ini terpotong tepi layar dan tidak terlihat. */
-  .tabbar::after {
-    content: '';
-    position: absolute;
-    top: calc(100% - 1px);
-    right: 0;
-    left: 0;
-    height: 8rem;
-    background-image: var(--noise), linear-gradient(180deg, #1c0e07, #1c0e07 45%, #160b06);
-  }
+  /* Catatan: tidak ada selubung `::after` di bawah tab bar. Elemen `fixed` di iOS
+     terpotong tepat di tepi layout viewport — tempat tab bar menempel — jadi apa
+     pun yang digambar di bawahnya tidak pernah terlihat (sudah dibuktikan di
+     perangkat). Jalur di bawah kotak dokumen dilukis kanvas `html`, yang diatur
+     sewarna tepi bawah tab bar (lihat aturan `html` di atas). */
   .tab-btn {
     flex: 1;
     display: flex;

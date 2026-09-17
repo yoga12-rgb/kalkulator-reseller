@@ -7,19 +7,36 @@
    * Dipakai untuk masalah layout di iOS: di mode PWA standalone, tinggi `dvh`/`vh`
    * dan nilai `env(safe-area-inset-*)` bisa berbeda dari area yang benar-benar
    * terlihat, sehingga tab bar tampak "mengambang" di atas dasar layar. Panel ini
-   * melaporkan angka aslinya dari perangkat. Hapus berkas ini beserta pemakaiannya
-   * di `App.svelte` kalau sudah tidak diperlukan.
+   * melaporkan angka aslinya dari perangkat. Tombol **Uji kanvas** mengecat kanvas
+   * halaman magenta: kalau pita di bawah tab bar ikut jadi magenta, pita itu memang
+   * bagian kanvas halaman; kalau tidak, pita itu dilukis di luar halaman (sistem).
+   * Hapus berkas ini beserta pemakaiannya di `App.svelte` kalau sudah tidak
+   * diperlukan.
    */
   let { shell = null, tabbar = null, onClose = null } = $props();
 
   let baris = $state([]);
   let tersalin = $state(false);
+  let ujiKanvas = $state(false);
   let dvhProbe = $state(null);
   let vhProbe = $state(null);
   let safeTopProbe = $state(null);
   let safeBottomProbe = $state(null);
 
   const angka = (nilai) => (Number.isFinite(nilai) ? Math.round(nilai * 10) / 10 : 0);
+
+  /**
+   * Mengecat kanvas `html` magenta supaya ketahuan siapa yang melukis pita di
+   * bawah tab bar: kalau pitanya ikut magenta, itu kanvas halaman (dan perbaikan
+   * warna kanvas berlaku); kalau tetap gelap, pita itu dilukis sistem di luar
+   * halaman sehingga hanya `background_color` manifest yang bisa menyamakannya.
+   */
+  function toggleKanvas() {
+    ujiKanvas = !ujiKanvas;
+    document.documentElement.style.backgroundColor = ujiKanvas ? '#ff00ff' : '';
+    document.documentElement.style.backgroundImage = ujiKanvas ? 'none' : '';
+    ukur();
+  }
 
   function ukur() {
     const html = document.documentElement;
@@ -49,6 +66,7 @@
       ['jarak ke visualViewport', `${angka(window.innerHeight - (vv ? vv.height + vv.offsetTop : window.innerHeight))}`],
       ['selisih layar - innerHeight', `${angka(window.screen.height - window.innerHeight)}`],
       ['scrollY', `${angka(window.scrollY)}`],
+      ['kanvas html', getComputedStyle(html).backgroundColor],
     ];
   }
 
@@ -86,6 +104,11 @@
       tersalin = false;
     }
   }
+  /** Cat kanvas dari tombol "Uji kanvas" dibersihkan saat panel ditutup. */
+  $effect(() => () => {
+    document.documentElement.style.backgroundColor = '';
+    document.documentElement.style.backgroundImage = '';
+  });
 </script>
 
 <!-- Probe tak terlihat: pengukuran 100dvh, 100vh, dan safe-area dari dalam halaman. -->
@@ -106,6 +129,9 @@
     <div class="flex items-center gap-1.5">
       <button class="btn btn-brass px-2 py-1 text-[10px]" onclick={salin}>
         {tersalin ? 'Tersalin' : 'Salin'}
+      </button>
+      <button class="btn btn-ghost px-2 py-1 text-[10px]" onclick={toggleKanvas}>
+        {ujiKanvas ? 'Kanvas normal' : 'Uji kanvas'}
       </button>
       {#if onClose}
         <button class="btn btn-ghost px-2 py-1 text-[10px]" onclick={onClose}>Tutup</button>
