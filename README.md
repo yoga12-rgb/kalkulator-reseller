@@ -154,15 +154,25 @@ otomatis pada muat ulang berikutnya.
   `src/app.css` (dibungkus `@supports (height: 100dvh)`, jadi browser lama tetap memakai perilaku
   semula: halaman yang menggulir), lalu `<main>` (`overflow-y-auto overscroll-contain`) jadi
   satu-satunya area gulir. Alasannya: di iOS toolbar Safari berubah tinggi mengikuti gulir
-  halaman, dan tinggi viewport yang ikut berubah itulah yang menggeser tab bar — dulu tab bar
-  `position: fixed` di dasar viewport, sementara pindah tab meng-clamp posisi gulir halaman
-  sehingga toolbar beranimasi lagi tiap pindah tab. Dengan halaman terkunci + tinggi `dvh`,
-  toolbar tidak punya alasan berubah dan tab bar ikut mengalir di dalam shell (`sticky`, lebar
-  shell yang sudah `max-w-md`). Detail yang menyertainya: setiap ganti tab `main.scrollTop`
-  direset lewat `$effect` (tab baru selalu mulai dari atas), padding bawah panel isi
+  halaman, dan tinggi viewport yang ikut berubah itulah yang menggeser tab bar — pindah tab dulu
+  juga meng-clamp posisi gulir halaman sehingga toolbar beranimasi lagi. Dengan halaman terkunci,
+  toolbar tidak punya alasan berubah, jadi tab bar (`fixed bottom-0`, selebar `max-w-md` di
+  tengah) tetap diam. Tab bar sengaja dibiarkan `fixed`, bukan `sticky` di dalam aliran shell:
+  tepi bawah layout viewport di iOS bisa berhenti ± 34px di atas dasar layar (pita home
+  indicator), sehingga elemen yang mengalir di dalam shell tampak "mengambang" — `fixed`
+  dijangkar ke dasar area yang benar-benar terlihat sehingga latar tab bar ikut menutup pita itu.
+  Detail yang menyertainya: setiap ganti tab `main.scrollTop` direset lewat
+  `$effect` (tab baru selalu mulai dari atas), padding bawah panel isi
   `calc(10rem + env(safe-area-inset-bottom))` — cukup untuk bar total 68px + tab bar 76px, dan
   tidak lagi menutup konten terakhir di iPhone berponi seperti `pb-40` dulu — `background-attachment:
   fixed` dihapus (halaman tidak digulir lagi), dan batas tinggi sheet rincian pakai `dvh` (`.sheet-max`).
+- **Diagnostik viewport**: buka aplikasi dengan `?debug=1` (mis. `https://<domain>/?debug=1`) untuk
+  menampilkan panel angka `innerHeight`, `visualViewport`, `100dvh`/`100vh`, `env(safe-area-inset-*)`,
+  serta posisi shell & tab bar. Dipakai kalau tab bar terlihat mengambang, karena di iOS PWA
+  standalone angka-angka itu bisa berbeda dari area yang benar-benar terlihat. Di iPhone, buka URL
+  debug lewat Safari lalu "Tambahkan ke Layar Utama" supaya panel muncul di mode standalone (ikon
+  app biasa tidak bisa dibuka dengan query tambahan, dan PWA punya penyimpanan sendiri). Kalau tidak
+  diperlukan lagi, hapus `src/components/ViewportDebug.svelte` beserta pemakaiannya di `App.svelte`.
 - **Scrollbar**: disembunyikan lewat `scrollbar-width: none` (Firefox) dan `::-webkit-scrollbar
   { display: none }` (Chromium/WebKit) di `src/app.css`, plus utilitas `.scroll-hide` untuk area
   gulir seperti panel rincian order. Scroll-nya sendiri tetap jalan (swipe, roda mouse, keyboard,

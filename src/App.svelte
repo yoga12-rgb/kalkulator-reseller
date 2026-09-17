@@ -17,6 +17,7 @@
   import HistoryPanel from './components/HistoryPanel.svelte';
   import Toast from './components/Toast.svelte';
   import Icon from './components/Icon.svelte';
+  import ViewportDebug from './components/ViewportDebug.svelte';
 
   const draft = store.loadDraft();
 
@@ -32,6 +33,13 @@
   let installEvent = $state(null);
   let updateAvailable = $state(false);
   let openCats = $state({ 'floss-roll': true, 'bolu-susu': false, roti: false });
+
+  /** Elemen shell & tab bar — hanya dipakai panel diagnostik `?debug=1`. */
+  let shellEl = $state(null);
+  let tabbarEl = $state(null);
+
+  /** Diagnosa viewport (mis. tab bar tampak mengambang di iOS): buka aplikasi dengan `?debug=1`. */
+  const debugViewport = new URLSearchParams(window.location.search).get('debug') === '1';
 
   const totals = $derived(computeTotals(qtyMap));
   const upgrade = $derived(suggestUpgrade(qtyMap));
@@ -233,7 +241,7 @@
 </script>
 
 <div class="flex min-h-dvh justify-center">
-  <div class="relative flex h-dvh w-full max-w-md flex-col">
+  <div bind:this={shellEl} class="relative flex h-dvh w-full max-w-md flex-col">
     <AppHeader
       installable={!!installEvent}
       onInstall={installApp}
@@ -351,8 +359,18 @@
       <SummaryBar {totals} onOpen={() => (sheetOpen = true)} />
     {/if}
 
+    <!--
+      Tab bar `fixed bottom-0` (bukan ikut aliran shell): di iOS tepi bawah layout
+      viewport bisa berhenti ~34px di atas dasar layar (pita home indicator), jadi
+      elemen yang mengalir di dalam shell tampak "mengambang". Elemen `fixed`
+      dijangkar ke dasar area yang benar-benar terlihat, sehingga latar tab bar
+      ikut menutup pita tersebut. Pergeseran saat pindah tab sudah dihilangkan di
+      sumbernya: halaman dikunci (`html`/`body` `overflow: hidden`) sehingga toolbar
+      Safari tidak pernah beranimasi lagi.
+    -->
     <nav
-      class="tabbar safe-bottom sticky bottom-0 z-30 flex flex-none items-stretch gap-1 px-2 pt-1"
+      bind:this={tabbarEl}
+      class="tabbar safe-bottom fixed bottom-0 left-1/2 z-30 flex w-full max-w-md -translate-x-1/2 items-stretch gap-1 px-2 pt-1"
       aria-label="Navigasi utama"
     >
       <button
@@ -410,4 +428,8 @@
     <Toast message={toast?.message} tone={toast?.tone} />
   </div>
 </div>
+
+{#if debugViewport}
+  <ViewportDebug shell={shellEl} tabbar={tabbarEl} />
+{/if}
 
