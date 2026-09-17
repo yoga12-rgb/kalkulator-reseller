@@ -17,7 +17,7 @@
 
     <span class="min-w-0 flex-1">
       <span class="block text-[10px] font-bold tracking-widest text-cocoa-800/80 uppercase">
-        {totals.totalQty} pcs · {totals.discountPercent > 0 ? `Diskon ${totals.discountPercent}%` : 'Belum ada diskon'}
+        {totals.totalQty} box · {totals.discountPercent > 0 ? `Diskon ${totals.discountPercent}%` : 'Belum ada diskon'}
       </span>
       <span class="emboss block font-mono text-lg leading-tight font-black text-cocoa-900">
         {formatRupiah(totals.totalBayar)}

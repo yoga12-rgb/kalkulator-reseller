@@ -92,8 +92,8 @@
         Tips naik ke diskon {upgrade.tier.percent}%
       </p>
       <p class="mt-1 text-[11px] leading-relaxed text-gold-100/85">
-        Tambah <span class="font-mono font-bold">{upgrade.addQty} pcs</span> varian termurah
-        ({formatRupiah(upgrade.cheapestPrice)}/pcs = {formatRupiah(upgrade.addCost)}), total jadi
+        Tambah <span class="font-mono font-bold">{upgrade.addQty} box</span> varian termurah
+        ({formatRupiah(upgrade.cheapestPrice)}/box = {formatRupiah(upgrade.addCost)}), total jadi
         <span class="font-mono font-bold">{formatRupiah(upgrade.newNormal)}</span> dan bayar
         <span class="font-mono font-bold">{formatRupiah(upgrade.newBayar)}</span>.
         {#if upgrade.extraBayar <= 0}
@@ -110,7 +110,7 @@
     <p class="text-[10px] leading-relaxed text-gold-200/75">
       Minimal belanja {formatRupiah(VOUCHER_MIN)} (harga normal) untuk dapat voucher. Diskon dihitung dari total harga
       normal seluruh varian, lalu dibulatkan ke rupiah terdekat. Total varian saat ini:
-      <span class="font-mono font-bold">{formatNumber(totals.totalQty)} pcs</span>.
+      <span class="font-mono font-bold">{formatNumber(totals.totalQty)} box</span>.
     </p>
   </div>
 </section>

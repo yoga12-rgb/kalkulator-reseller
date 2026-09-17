@@ -95,7 +95,7 @@
 
         <div class="flex items-center justify-between text-[12px]">
           <span class="font-bold">Total varian</span>
-          <span class="font-mono">{formatNumber(totals.totalQty)} pcs</span>
+          <span class="font-mono">{formatNumber(totals.totalQty)} box</span>
         </div>
         <div class="flex items-center justify-between text-[12px]">
           <span class="font-bold">Harga normal</span>
@@ -123,7 +123,7 @@
       {#if upgrade}
         <p class="mt-2 flex items-start gap-1.5 rounded-xl border border-gold-500/25 bg-cocoa-950/50 p-2 text-[11px] text-gold-200/85">
           <Icon name="spark" size={13} class="mt-0.5 flex-none text-gold-300" />
-          Tambah {upgrade.addQty} pcs varian {formatRupiah(upgrade.cheapestPrice)} → langsung diskon
+          Tambah {upgrade.addQty} box varian {formatRupiah(upgrade.cheapestPrice)} → langsung diskon
           {upgrade.tier.percent}%.
         </p>
       {/if}

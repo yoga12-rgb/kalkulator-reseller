@@ -40,7 +40,7 @@
       {/each}
       {#if filledVariants > 0}
         <p class="pt-0.5 text-center text-[11px] text-gold-200/60">
-          {filledVariants} varian terisi · {categoryQty} pcs
+          {filledVariants} varian terisi · {categoryQty} box
         </p>
       {/if}
     </div>

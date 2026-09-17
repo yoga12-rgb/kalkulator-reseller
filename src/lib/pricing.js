@@ -181,7 +181,7 @@ export function buildOrderText(order) {
     '*Rincian Varian*',
     ...rows,
     '',
-    `Total varian : ${formatNumber(order.totalQty)} pcs`,
+    `Total varian : ${formatNumber(order.totalQty)} box`,
     `Harga normal : ${formatRupiah(order.totalNormal)}`,
     `Diskon       : ${order.discountPercent}% (${formatRupiah(order.discountAmount)})`,
     `*TOTAL BAYAR : ${formatRupiah(order.totalBayar)}*`,

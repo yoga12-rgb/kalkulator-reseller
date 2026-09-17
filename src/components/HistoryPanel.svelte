@@ -33,7 +33,7 @@
   );
 
   const totalOmzet = $derived(history.reduce((sum, o) => sum + o.totalBayar, 0));
-  const totalPcs = $derived(history.reduce((sum, o) => sum + o.totalQty, 0));
+  const totalBox = $derived(history.reduce((sum, o) => sum + o.totalQty, 0));
   const totalHemat = $derived(history.reduce((sum, o) => sum + o.discountAmount, 0));
 
   /** Kelompokkan per hari supaya mirip buku catatan. */
@@ -77,8 +77,8 @@
         <p class="font-mono text-sm font-bold text-gold-100">{formatNumber(history.length)}</p>
       </div>
       <div class="panel-inset rounded-xl px-2 py-2">
-        <p class="text-[10px] tracking-wide text-gold-200/70 uppercase">Total pcs</p>
-        <p class="font-mono text-sm font-bold text-gold-100">{formatNumber(totalPcs)}</p>
+        <p class="text-[10px] tracking-wide text-gold-200/70 uppercase">Total box</p>
+        <p class="font-mono text-sm font-bold text-gold-100">{formatNumber(totalBox)}</p>
       </div>
       <div class="panel-inset rounded-xl px-2 py-2">
         <p class="text-[10px] tracking-wide text-gold-200/70 uppercase">Omzet</p>
@@ -148,7 +148,7 @@
               <div class="min-w-0 flex-1">
                 <p class="truncate text-sm font-bold">{order.customer?.trim() || 'Tanpa nama'}</p>
                 <p class="font-mono text-[11px] opacity-70">
-                  {formatClock(order.createdAt)} · {order.totalQty} pcs · normal {formatRupiah(order.totalNormal)}
+                  {formatClock(order.createdAt)} · {order.totalQty} box · normal {formatRupiah(order.totalNormal)}
                 </p>
                 {#if order.note}
                   <p class="mt-1 text-[11px] italic opacity-75">“{order.note}”</p>
@@ -168,7 +168,7 @@
                 {#each order.lines as line (line.id)}
                   <li class="flex items-baseline gap-2 text-[12px]">
                     <span class="flex-1 truncate font-bold">{line.variant}</span>
-                    <span class="font-mono opacity-75">{line.qty} pcs</span>
+                    <span class="font-mono opacity-75">{line.qty} box</span>
                     <span class="w-20 shrink-0 text-right font-mono font-bold">{formatRupiah(line.subtotal)}</span>
                   </li>
                 {/each}

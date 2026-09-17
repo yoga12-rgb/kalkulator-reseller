@@ -1,7 +1,7 @@
 # Kalkulator Reseller Rajaklana
 
 PWA kalkulator diskon voucher reseller **Rajaklana (Abon Gulung & Bolu Susu)**.
-Masukkan jumlah pcs tiap varian → langsung dapat diskon, total bayar, saran naik tier, dan rincian
+Masukkan jumlah box tiap varian → langsung dapat diskon, total bayar, saran naik tier, dan rincian
 order siap dikirim ke WhatsApp.
 
 Mobile-first, instalable (standalone), dan **jalan offline** — cocok dipakai di toko atau pasar.
@@ -14,9 +14,9 @@ Mobile-first, instalable (standalone), dan **jalan offline** — cocok dipakai d
 | --- | --- |
 | 3 kategori produk | Floss Roll (8 varian), Bolu Susu (3 varian), Roti (2 varian) |
 | Kalkulasi otomatis | Diskon dihitung dari **total harga normal** (sebelum diskon), dibulatkan ke rupiah terdekat |
-| Stepper qty | Tombol −/+ besar + input manual (aman untuk angka besar, maks 9999 pcs) |
+| Stepper qty | Tombol −/+ besar + input manual (aman untuk angka besar, maks 9999 box) |
 | Pencarian varian | Filter cepat di daftar input |
-| Saran naik tier | Hitung berapa pcs lagi (pakai varian termurah) untuk dapat diskon lebih besar |
+| Saran naik tier | Hitung berapa box lagi (pakai varian termurah) untuk dapat diskon lebih besar |
 | Rincian order | Sheet berisi rincian + nama/catatan reseller |
 | Salin / kirim | Salin rincian ke clipboard atau langsung buka WhatsApp |
 | Riwayat order | Disimpan di localStorage, dikelompokkan per hari, ada pencarian |

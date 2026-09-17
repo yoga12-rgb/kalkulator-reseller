@@ -23,7 +23,7 @@
     </div>
     <p class="font-mono text-xs text-gold-300/85">
       {new Intl.NumberFormat('id-ID').format(product.price)}
-      <span class="text-gold-200/40">/pcs</span>
+      <span class="text-gold-200/40">/box</span>
     </p>
     {#if qty > 0}
       <p class="mt-0.5 font-mono text-[11px] font-bold text-gold-200">

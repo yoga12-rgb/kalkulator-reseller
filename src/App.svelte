@@ -238,7 +238,7 @@
               <h2 class="emboss font-display text-sm font-black tracking-widest text-gold-100 uppercase">
                 Input Varian
               </h2>
-              <p class="text-[11px] text-gold-200/70">Masukkan jumlah pcs per varian</p>
+              <p class="text-[11px] text-gold-200/70">Masukkan jumlah box per varian</p>
             </div>
             {#if !totals.isEmpty}
               <button class="btn btn-ghost px-2.5 py-2" onclick={resetAll} title="Reset kalkulator">
@@ -261,7 +261,7 @@
                 <p class="font-mono text-sm font-bold text-gold-100">{totals.lines.length}</p>
               </div>
               <div class="panel-inset rounded-xl px-2 py-2">
-                <p class="text-[10px] tracking-wide text-gold-200/70 uppercase">Total pcs</p>
+                <p class="text-[10px] tracking-wide text-gold-200/70 uppercase">Total box</p>
                 <p class="font-mono text-sm font-bold text-gold-100">{formatNumber(totals.totalQty)}</p>
               </div>
               <div class="panel-inset rounded-xl px-2 py-2">

@@ -147,7 +147,7 @@ try {
   await page.waitForSelector('text=Bu Rina - Bandung');
   check('Order muncul di tab riwayat', true);
   await page.getByRole('button', { name: /^Detail$/ }).first().click();
-  await page.waitForSelector('text=6 pcs');
+  await page.waitForSelector('text=6 box');
   check('Detail order bisa dibuka', true);
 
   // --- persistensi setelah reload -------------------------------------
