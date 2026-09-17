@@ -1,0 +1,506 @@
+@import 'tailwindcss';
+
+/* ------------------------------------------------------------------
+   Token tema skeuomorfik (kulit, kuningan, kertas nota)
+   ------------------------------------------------------------------ */
+@theme {
+  --color-cocoa-950: #160b06;
+  --color-cocoa-900: #2c170e;
+  --color-cocoa-800: #3d2114;
+  --color-cocoa-700: #55301d;
+  --color-cocoa-600: #6f4029;
+  --color-cocoa-500: #8b5539;
+
+  --color-gold-50: #fffdf3;
+  --color-gold-100: #fff6d8;
+  --color-gold-200: #ffe9a8;
+  --color-gold-300: #f7d67c;
+  --color-gold-400: #e8bc52;
+  --color-gold-500: #cf9c33;
+  --color-gold-600: #a97a24;
+  --color-gold-700: #7f5a1a;
+
+  --color-paper-50: #fffdf7;
+  --color-paper-100: #fbf3e0;
+  --color-paper-200: #f1e3c6;
+  --color-paper-300: #e2cfa6;
+
+  --color-chili-500: #c0392b;
+  --color-chili-600: #98281d;
+  --color-leaf-500: #3f7d4d;
+  --color-leaf-600: #2f5f3a;
+
+  --font-display: Georgia, 'Times New Roman', serif;
+  --font-body: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: ui-monospace, 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+}
+
+/* ------------------------------------------------------------------
+   Dasar
+   ------------------------------------------------------------------ */
+:root {
+  --noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.10'/%3E%3C/svg%3E");
+  color-scheme: dark;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  color: var(--color-paper-100);
+  background-color: var(--color-cocoa-900);
+  background-image:
+    var(--noise),
+    radial-gradient(120% 70% at 50% -10%, rgba(255, 214, 124, 0.18), transparent 62%),
+    linear-gradient(180deg, #3a1e12 0%, #2c170e 46%, #160b06 100%);
+  background-attachment: fixed;
+  overscroll-behavior-y: none;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+input,
+textarea,
+button,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type='number'] {
+  -moz-appearance: textfield;
+}
+
+::selection {
+  background: var(--color-gold-400);
+  color: var(--color-cocoa-900);
+}
+
+/* scrollbar ramping untuk daftar panjang */
+.scroll-slim {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-gold-600) transparent;
+}
+.scroll-slim::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.scroll-slim::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--color-gold-500), var(--color-gold-700));
+  border-radius: 999px;
+}
+
+/* ------------------------------------------------------------------
+   Komponen skeuomorfik
+   ------------------------------------------------------------------ */
+@layer components {
+  /* Panel dasar: piringan kulit gelap dengan bevel */
+  .panel {
+    border-radius: 18px;
+    background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(0, 0, 0, 0.16)),
+      linear-gradient(180deg, var(--color-cocoa-700), var(--color-cocoa-800));
+    border: 1px solid rgba(255, 214, 124, 0.18);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.14),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.5),
+      0 10px 20px -12px rgba(0, 0, 0, 0.9),
+      0 2px 0 rgba(0, 0, 0, 0.4);
+  }
+
+  /* Panel menonjol (lebih terang, untuk kartu utama) */
+  .panel-raised {
+    border-radius: 20px;
+    background-image: var(--noise),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(0, 0, 0, 0.12)),
+      linear-gradient(180deg, var(--color-cocoa-600), var(--color-cocoa-800));
+    border: 1px solid rgba(255, 214, 124, 0.22);
+    box-shadow:
+      inset 0 2px 0 rgba(255, 255, 255, 0.16),
+      inset 0 -2px 6px rgba(0, 0, 0, 0.45),
+      0 14px 26px -16px rgba(0, 0, 0, 1);
+  }
+
+  /* Area tenggelam (input, track) */
+  .panel-inset {
+    border-radius: 14px;
+    background-image: linear-gradient(180deg, rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.22));
+    border: 1px solid rgba(0, 0, 0, 0.6);
+    box-shadow:
+      inset 0 3px 8px rgba(0, 0, 0, 0.75),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.08),
+      0 1px 0 rgba(255, 255, 255, 0.08);
+  }
+
+  /* Pelat kuningan / emas */
+  .plate-gold {
+    border-radius: 16px;
+    background-image: var(--noise),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.65), rgba(255, 255, 255, 0) 42%),
+      linear-gradient(180deg, var(--color-gold-200), var(--color-gold-400) 55%, var(--color-gold-600));
+    color: var(--color-cocoa-900);
+    border: 1px solid var(--color-gold-700);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.85),
+      inset 0 -2px 4px rgba(122, 82, 22, 0.5),
+      0 8px 16px -10px rgba(0, 0, 0, 0.9);
+  }
+
+  /* Kertas nota */
+  .paper {
+    border-radius: 16px;
+    background-image: var(--noise), linear-gradient(180deg, var(--color-paper-50), var(--color-paper-200));
+    color: var(--color-cocoa-900);
+    border: 1px solid var(--color-paper-300);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.9),
+      0 14px 26px -18px rgba(0, 0, 0, 1);
+  }
+
+  /* Tepi bergerigi bawah seperti struk */
+  .receipt-edge {
+    --tooth: 10px;
+    mask-image: linear-gradient(#000 0 0),
+      radial-gradient(circle at 50% 100%, transparent 0 48%, #000 50%) 0 100% / var(--tooth) var(--tooth) repeat-x;
+    -webkit-mask-image: linear-gradient(#000 0 0),
+      radial-gradient(circle at 50% 100%, transparent 0 48%, #000 50%) 0 100% / var(--tooth) var(--tooth) repeat-x;
+    -webkit-mask-composite: source-in;
+    mask-composite: intersect;
+    padding-bottom: calc(var(--tooth) + 4px);
+  }
+
+  /* Teks emboss */
+  .emboss {
+    text-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.35),
+      0 -1px 1px rgba(0, 0, 0, 0.35);
+  }
+  .engrave {
+    text-shadow:
+      0 -1px 0 rgba(0, 0, 0, 0.55),
+      0 1px 1px rgba(255, 255, 255, 0.12);
+  }
+
+  /* Garis jahitan */
+  .stitch {
+    border: 1px dashed rgba(255, 214, 124, 0.35);
+    border-radius: 14px;
+  }
+
+  .divider-dash {
+    border-top: 1px dashed rgba(44, 23, 14, 0.35);
+  }
+
+  /* Tombol: dasar bevel + efek tekan */
+  .btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    border-radius: 14px;
+    padding: 0.65rem 1rem;
+    font-weight: 700;
+    font-size: 0.9rem;
+    line-height: 1.1;
+    letter-spacing: 0.01em;
+    cursor: pointer;
+    user-select: none;
+    transition: transform 90ms ease, box-shadow 90ms ease, filter 120ms ease;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.35),
+      inset 0 -2px 3px rgba(0, 0, 0, 0.28),
+      0 5px 10px -6px rgba(0, 0, 0, 0.9),
+      0 1px 0 rgba(0, 0, 0, 0.6);
+  }
+  .btn:active:not(:disabled),
+  .btn[data-pressed='true'] {
+    transform: translateY(2px);
+    filter: brightness(0.96);
+    box-shadow:
+      inset 0 2px 6px rgba(0, 0, 0, 0.5),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.2),
+      0 2px 4px -3px rgba(0, 0, 0, 0.9);
+  }
+  .btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    filter: saturate(0.5);
+  }
+  .btn:focus-visible {
+    outline: 2px solid var(--color-gold-300);
+    outline-offset: 2px;
+  }
+
+  .btn-brass {
+    background-image: linear-gradient(180deg, var(--color-gold-200), var(--color-gold-400) 58%, var(--color-gold-600));
+    color: var(--color-cocoa-900);
+    border: 1px solid var(--color-gold-700);
+  }
+  .btn-wood {
+    background-image: var(--noise), linear-gradient(180deg, var(--color-cocoa-500), var(--color-cocoa-800));
+    color: var(--color-gold-100);
+    border: 1px solid rgba(255, 214, 124, 0.3);
+  }
+  .btn-danger {
+    background-image: linear-gradient(180deg, #d2554a, var(--color-chili-600));
+    color: #fff4ef;
+    border: 1px solid #6d1a12;
+  }
+  .btn-ghost {
+    background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(0, 0, 0, 0.12));
+    color: var(--color-gold-100);
+    border: 1px solid rgba(255, 214, 124, 0.28);
+  }
+
+  /* ---------------------------------------------------------------- input */
+  .field {
+    border-radius: 12px;
+    background-image: linear-gradient(180deg, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.2));
+    border: 1px solid rgba(0, 0, 0, 0.6);
+    box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.7), 0 1px 0 rgba(255, 255, 255, 0.08);
+    color: var(--color-gold-100);
+    padding: 0.6rem 0.75rem;
+    width: 100%;
+    outline: none;
+  }
+  .field::placeholder {
+    color: rgba(255, 233, 168, 0.45);
+  }
+  .field:focus {
+    border-color: var(--color-gold-500);
+    box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.7), 0 0 0 3px rgba(207, 156, 51, 0.28);
+  }
+
+  /* ------------------------------------------------------- stepper qty */
+  .step-btn {
+    width: 2.35rem;
+    height: 2.35rem;
+    flex: none;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    font-weight: 800;
+    cursor: pointer;
+    user-select: none;
+    transition: transform 90ms ease, filter 120ms ease;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), inset 0 -2px 3px rgba(0, 0, 0, 0.3),
+      0 4px 8px -5px rgba(0, 0, 0, 0.9);
+  }
+  .step-btn:active:not(:disabled) {
+    transform: translateY(2px) scale(0.97);
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.45);
+  }
+  .step-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  .step-minus {
+    background-image: linear-gradient(180deg, var(--color-cocoa-500), var(--color-cocoa-800));
+    color: var(--color-gold-100);
+    border: 1px solid rgba(255, 214, 124, 0.28);
+  }
+  .step-plus {
+    background-image: linear-gradient(180deg, var(--color-gold-200), var(--color-gold-400) 58%, var(--color-gold-600));
+    color: var(--color-cocoa-900);
+    border: 1px solid var(--color-gold-700);
+  }
+  .qty-input {
+    width: 3.1rem;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 1.05rem;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--color-gold-100);
+    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.6);
+  }
+
+  /* ------------------------------------------------------- pill / chip */
+  .chip {
+    border-radius: 999px;
+    padding: 0.22rem 0.6rem;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(0, 0, 0, 0.16));
+    border: 1px solid rgba(255, 214, 124, 0.3);
+    color: var(--color-gold-200);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  }
+  .chip-gold {
+    background-image: linear-gradient(180deg, var(--color-gold-200), var(--color-gold-500));
+    border-color: var(--color-gold-700);
+    color: var(--color-cocoa-900);
+  }
+  .chip-red {
+    background-image: linear-gradient(180deg, #d2554a, var(--color-chili-600));
+    border-color: #6d1a12;
+    color: #fff4ef;
+  }
+  .chip-leaf {
+    background-image: linear-gradient(180deg, #5b9c69, var(--color-leaf-600));
+    border-color: #234a2b;
+    color: #f2fff4;
+  }
+
+  /* ------------------------------------------------- kartu voucher tier */
+  .tier-card {
+    position: relative;
+    border-radius: 16px;
+    padding: 0.7rem 0.8rem;
+    text-align: center;
+    background-image: var(--noise), linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(0, 0, 0, 0.22)),
+      linear-gradient(180deg, #4a2716, #2c170e);
+    border: 1px solid rgba(255, 214, 124, 0.22);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 8px 14px -12px rgba(0, 0, 0, 1);
+    transition: transform 160ms ease, box-shadow 160ms ease, filter 160ms ease;
+  }
+  .tier-card-on {
+    background-image: var(--noise), linear-gradient(180deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0) 45%),
+      linear-gradient(180deg, var(--color-gold-200), var(--color-gold-400) 60%, var(--color-gold-600));
+    border-color: var(--color-gold-700);
+    color: var(--color-cocoa-900);
+    transform: translateY(-2px) scale(1.03);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 0 0 3px rgba(207, 156, 51, 0.25),
+      0 12px 22px -12px rgba(0, 0, 0, 1);
+  }
+  .tier-stamp {
+    position: absolute;
+    top: -0.55rem;
+    right: -0.35rem;
+    transform: rotate(12deg);
+  }
+
+  /* ------------------------------------------------------ progress bar */
+  .progress-track {
+    height: 0.7rem;
+    border-radius: 999px;
+    background-image: linear-gradient(180deg, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.3));
+    border: 1px solid rgba(0, 0, 0, 0.6);
+    box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.75);
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    border-radius: 999px;
+    background-image: linear-gradient(180deg, var(--color-gold-100), var(--color-gold-400) 55%, var(--color-gold-600));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    transition: width 260ms ease;
+  }
+
+  /* ----------------------------------------------------------- tab bar */
+  .tabbar {
+    background-image: var(--noise), linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(0, 0, 0, 0.25)),
+      linear-gradient(180deg, #40220f, #1c0e07);
+    border-top: 1px solid rgba(255, 214, 124, 0.22);
+    box-shadow: 0 -12px 24px -16px rgba(0, 0, 0, 1), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  }
+  .tab-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 0.45rem 0.25rem;
+    border-radius: 14px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: rgba(255, 233, 168, 0.62);
+    cursor: pointer;
+    transition: color 150ms ease, background 150ms ease, transform 120ms ease;
+  }
+  .tab-btn:active {
+    transform: translateY(1px);
+  }
+  .tab-btn-on {
+    color: var(--color-gold-100);
+    background-image: linear-gradient(180deg, rgba(255, 214, 124, 0.22), rgba(0, 0, 0, 0.2));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), inset 0 -2px 4px rgba(0, 0, 0, 0.5);
+  }
+
+  /* --------------------------------------------------------- lain-lain */
+  .badge-count {
+    min-width: 1.35rem;
+    height: 1.35rem;
+    padding: 0 0.3rem;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.72rem;
+    font-weight: 800;
+    font-family: var(--font-mono);
+    background-image: linear-gradient(180deg, var(--color-gold-200), var(--color-gold-500));
+    color: var(--color-cocoa-900);
+    border: 1px solid var(--color-gold-700);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 2px 4px -2px rgba(0, 0, 0, 0.9);
+  }
+  .flyer {
+    background-image: var(--noise),
+      radial-gradient(90% 60% at 50% 0%, rgba(255, 233, 168, 0.22), transparent 60%),
+      linear-gradient(180deg, #6d1512, #3a0c0a);
+    border: 1px solid rgba(255, 214, 124, 0.45);
+  }
+  .glow-gold {
+    box-shadow: 0 0 0 1px rgba(255, 233, 168, 0.4), 0 0 26px -8px rgba(255, 214, 124, 0.65);
+  }
+}
+
+/* --------------------------------------------------------------- utilitas */
+.safe-bottom {
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+}
+.safe-top {
+  padding-top: max(0.5rem, env(safe-area-inset-top));
+}
+/* Jarak aman tepat di bawah header sticky (dipakai toast agar tidak menutupi judul). */
+.below-header {
+  top: calc(max(0.5rem, env(safe-area-inset-top)) + 3.9rem);
+}
+.safe-x {
+  padding-left: max(0.75rem, env(safe-area-inset-left));
+  padding-right: max(0.75rem, env(safe-area-inset-right));
+}
+.tap-none {
+  touch-action: manipulation;
+}
+.animate-rise {
+  animation: rise 200ms ease-out both;
+}
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
