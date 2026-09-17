@@ -501,50 +501,6 @@ try {
   );
   await page.screenshot({ path: resolve(ROOT, 'tmp/smoke-kredit.png') });
 
-  // --- panel diagnostik `?debug=1`: tombol "Uji kanvas" ------------------
-  await page.goto(`${URL}?debug=1`, { waitUntil: 'load' });
-  await page.waitForSelector('[aria-label="Diagnostik viewport"]', { timeout: 15000 });
-  const tombolUji = page.getByRole('button', { name: 'Uji kanvas' });
-  const adaTombolUji = (await tombolUji.count()) === 1;
-  const bawahUji = await tiruGeometriIos(page, GAP_PITA);
-  const tinggiUji = Math.max(4, (page.viewportSize()?.height ?? 844) - bawahUji - 4);
-  await tombolUji.click();
-  await page.waitForTimeout(150);
-  const isiUji = await jepretPita(bawahUji + 2, tinggiUji, 'tmp/pita-uji-kanvas.png');
-  const isiMagenta = isiUji[0] > 200 && isiUji[1] < 60 && isiUji[2] > 200;
-  check(
-    'Panel `?debug=1` + tombol "Uji kanvas" mengecat kanvas sampai pita bawah',
-    adaTombolUji && isiMagenta,
-    `tombol uji=${adaTombolUji}, pita ${warnaRgb(isiUji)}`,
-  );
-  await page.getByRole('button', { name: 'Kanvas normal' }).click();
-  await page.waitForTimeout(150);
-  const isiNormal = await jepretPita(bawahUji + 2, tinggiUji, 'tmp/pita-uji-normal.png');
-  check(
-    'Tombol "Kanvas normal" mengembalikan warna kanvas',
-    !(isiNormal[0] > 200 && isiNormal[2] > 200) && Math.abs(isiNormal[0] - 28) < 20,
-    `pita ${warnaRgb(isiNormal)}`,
-  );
-
-  // Baris pembanding warna: ketuk nomor 1 (#000000) → `--warna-tepi` ikut berubah,
-  // sehingga bibir bawah tab bar + kanvas langsung jadi hitam (alat ukur warna pita
-  // yang dilukis sistem di perangkat).
-  const barisWarna = page.locator('[aria-label="Pembanding warna tepi bawah"] button');
-  const jumlahWarna = await barisWarna.count();
-  await barisWarna.first().click();
-  await page.waitForTimeout(150);
-  const kanvasHitam = await page.evaluate(
-    () => getComputedStyle(document.documentElement).backgroundColor,
-  );
-  const tepiHitam = await jepretPita(bawahUji - 2, 2, 'tmp/pita-uji-warna.png');
-  check(
-    'Baris pembanding warna menyetel `--warna-tepi` (bibir & kanvas ikut berubah)',
-    jumlahWarna >= 5 && kanvasHitam === 'rgb(0, 0, 0)' && tepiHitam.every((nilai) => nilai < 8),
-    `${jumlahWarna} baris, kanvas ${kanvasHitam}, tepi tab bar ${warnaRgb(tepiHitam)}`,
-  );
-  await barisWarna.nth(3).click(); // kembali ke #1c0e07 (baris ke-4)
-  await page.waitForTimeout(120);
-
   console.log(
     'Screenshot: tmp/smoke-kalkulator.png, tmp/smoke-kredit.png, tmp/smoke-riwayat.png, tmp/smoke-voucher.png',
   );

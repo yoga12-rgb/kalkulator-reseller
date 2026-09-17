@@ -110,11 +110,10 @@ npm run smoke      # uji end-to-end di browser asli (butuh Chrome/Edge terpasang
 ```
 
 `npm run smoke` memakai `playwright-core` dengan browser Chrome/Edge yang sudah ada di sistem
-(tidak mengunduh browser). Hasilnya: 33 pemeriksaan (render, manifest, service worker, anti-zoom
+(tidak mengunduh browser). Hasilnya: 30 pemeriksaan (render, manifest, service worker, anti-zoom
 double tap, halaman terkunci + panel isi yang menggulir, tab bar tidak bergeser saat pindah tab,
 **pita bawah**: geometri iOS standalone ditiru lalu warna pitanya dibandingkan dengan warna tepi
-tab bar langsung dari piksel screenshot — termasuk kontrol yang sengaja bisa gagal, panel
-`?debug=1` + tombol "Uji kanvas", tab baru selalu
+tab bar langsung dari piksel screenshot — termasuk kontrol yang sengaja bisa gagal, tab baru selalu
 mulai dari atas, kalkulasi, localStorage, posisi toast, kredit developer, tab
 voucher/riwayat, persistensi setelah reload) dan screenshot ke `tmp/` (`smoke-kalkulator.png`,
 `smoke-kredit.png`, `smoke-riwayat.png`, `smoke-voucher.png`, `pita-*.png`).
@@ -167,51 +166,41 @@ otomatis pada muat ulang berikutnya.
   toolbar tidak punya alasan berubah, jadi tab bar (`fixed bottom-0`, selebar `max-w-md` di
   tengah) tetap diam. Tab bar sengaja dibiarkan `fixed`, bukan `sticky` di dalam aliran shell:
   `fixed` dijangkarkan ke tepi paling bawah yang dicapai layout.
-  **Pita dasar layar di iOS standalone** (terukur di iPhone XR lewat panel diagnostik): layar
-  896px, `innerHeight`/`100dvh` 848px, `100vh` 896px — konten digambar dari paling atas layar, tapi
-  kotak dokumen berhenti setinggi status bar (48px) di atas dasar layar, dan tab bar menempel dasar
-  kotak itu. Jalur 48px sisanya **dilukis sistem, di luar halaman**: sudah dibuktikan di perangkat
-  dengan dua percobaan — selubung `.tabbar::after` yang memperpanjang latar bar ke bawah (tidak
-  terlihat: elemen `fixed` terpotong di tepi layout viewport), dan mengecat kanvas `html` magenta
-  lewat tombol "Uji kanvas" (pitanya tetap gelap). Jadi jalur itu **tidak bisa diwarnai dari CSS,
-  hanya disamakan**. Tiga lapis:
-  1. `--warna-tepi` (`src/app.css`) jadi satu-satunya sumber warna tepi bawah: dipakai kanvas `html`,
-     dasar `body`, dan **bibir bawah tab bar** (`.tabbar::after`, 3px rata tanpa noise supaya tepi
-     bar presisi) — nilainya harus sama dengan `background_color` manifest. Diuji lewat piksel
-     screenshot (bandingkan pita vs tepi bar) di `npm run smoke`;
-  2. `background_color` manifest (`#1c0e07`) untuk pita yang dilukis sistem. WebKit menyimpan manifest
-     saat ikon dipasang, jadi nilai ini baru terpakai pada ikon yang dipasang ulang (dan menghapus
-     ikon juga menghapus localStorage riwayat — jadi hindari kalau bisa);
-  3. panel diagnostik menampilkan **baris pembanding warna** (7 swatch bernomor, tepat di atas tab
-     bar): ketuk barisnya satu per satu sampai batas antara tab bar dan pita hilang, lalu
-     `--warna-tepi` + `background_color` disetel ke nilai itu sehingga pita menyatu tanpa perlu
-     memasang ulang ikon.
+  **Pita dasar layar di iOS standalone** (terukur di iPhone XR): layar 896px, `innerHeight`/`100dvh`
+  848px, `100vh` 896px — konten digambar dari paling atas layar, tapi kotak dokumen berhenti setinggi
+  status bar (48px) di atas dasar layar, dan tab bar menempel dasar kotak itu. Jalur 48px sisanya
+  **dilukis WebKit di luar kotak dokumen**, memakai `background-color` dari **`body`** — bukan kanvas
+  `html`. Dua pengujian di perangkat membuktikannya: (1) selubung `.tabbar::after` yang dulu
+  memperpanjang latar bar ke bawah kotaknya tidak pernah terlihat (elemen `fixed` terpotong di tepi
+  layout viewport), dan (2) menyetel `background-color` **`html`** ke magenta tidak mengubah jalur itu,
+  sementara menyetel `--warna-tepi` (yang dipakai `body`) **ikut mengubahnya**. Jadi:
+  1. `--warna-tepi` (`src/app.css`) adalah satu-satunya sumber warna tepi bawah — dipakai `body`
+     (jalur yang dilukis WebKit), kanvas `html`, dan **bibir 3px** `.tabbar::after` (rata, tanpa noise,
+     supaya tepi bar presisi). Karena jalur itu dan bibir bar membaca variabel yang sama, keduanya
+     selalu sewarna sehingga batasnya hilang — diuji lewat piksel screenshot di `npm run smoke`;
+  2. `background_color` manifest (`#1c0e07`) disamakan dengan variabel itu untuk layar splash. WebKit
+     menyimpan manifest saat ikon dipasang, jadi perubahan nilainya baru terpakai pada ikon yang
+     dipasang ulang (menghapus ikon juga menghapus localStorage riwayat — tidak perlu kalau
+     `--warna-tepi` sudah disamakan);
+  3. `body` memakai `background-repeat: no-repeat` supaya lapisan gradasinya tidak pernah terulang di
+     jalur itu — dulu, sebelum `html` punya latar, pitanya memang tampil sebagai gradasi body yang
+     terulang (pita cokelat terang yang dikeluhkan pertama kali).
   Gradasi tab bar berakhir di `#251309` supaya setelah lapisan gelap `rgba(0, 0, 0, 0.25)` tepinya
-  tampil `#1c0e07` di atas bibir 3px yang rata.
+  tampil `#1c0e07`, sama dengan bibir 3px yang rata di bawahnya.
   Detail yang menyertainya: setiap ganti tab `main.scrollTop` direset lewat
   `$effect` (tab baru selalu mulai dari atas), padding bawah panel isi
   `calc(10rem + env(safe-area-inset-bottom))` — cukup untuk bar total 68px + tab bar 76px, dan
   tidak lagi menutup konten terakhir di iPhone berponi seperti `pb-40` dulu — `background-attachment:
   fixed` dihapus (halaman tidak digulir lagi), dan batas tinggi sheet rincian pakai `dvh` (`.sheet-max`).
-- **Diagnostik viewport**: buka aplikasi dengan `?debug=1` (mis. `https://<domain>/?debug=1`) untuk
-  memaksa panel angka `innerHeight`, `visualViewport`, `100dvh`/`100vh`, `env(safe-area-inset-*)`,
-  `jarak ke visualViewport`, `selisih layar − innerHeight`, `kanvas html`, serta posisi shell & tab
-  bar. Panel ini
-  **juga menyala sendiri** kalau `selisihViewport()` di `App.svelte` mengukur layout meleset > 2px
-  dari layar (tab bar tidak menempel dasar viewport, area terlihat lebih pendek, atau di mode
-  standalone layar lebih tinggi dari viewport) — jadi angkanya bisa dibaca langsung dari PWA yang
-  sudah terpasang, karena ikon di layar utama tidak bisa dibuka dengan query tambahan. Tombol
-  **Uji kanvas** mengecat kanvas `html` magenta: kalau pita di bawah tab bar ikut magenta, pita itu
-  memang kanvas halaman (perbaikan warna kanvas berlaku); kalau tetap gelap, pita itu dilukis sistem
-  di luar halaman dan yang menyamakannya adalah warna tepi bawah (`--warna-tepi` +
-  `background_color` manifest). Untuk kasus terakhir itu ada
-  **baris pembanding warna** (7 swatch bernomor) tepat di atas tab bar: ketuk salah satu barisnya →
-  `--warna-tepi` sementara ikut berubah (kanvas + bibir bawah tab bar), lalu cari nomor yang membuat
-  batas antara tab bar dan pita itu hilang — itulah warna pita yang asli, dan nilai itu yang
-  dipakai permanen. Tekan
-  **Salin** untuk menyalin semua baris, atau **Tutup** (panel tidak muncul lagi di sesi itu).
-  Dipakai kalau tab bar terlihat mengambang di iPhone. Kalau tidak diperlukan lagi, hapus
-  `src/components/ViewportDebug.svelte` beserta pemakaiannya di `App.svelte`.
+- **Diagnostik viewport (sudah dihapus)**: kalau masalah layout di perangkat muncul lagi, panel
+  angka `innerHeight`, `visualViewport`, `100dvh`/`100vh`, `env(safe-area-inset-*)`, `jarak ke
+  visualViewport`, `selisih layar − innerHeight`, `kanvas html`, posisi shell & tab bar, plus alat
+  **"Uji kanvas"** dan **baris pembanding warna** pernah dipakai untuk memastikan warna pita dasar
+  layar. Kodenya ada di riwayat git (`src/components/ViewportDebug.svelte` sebelum commit
+  pembersihan) beserta tekniknya:
+  tiru geometri iOS (kotak dokumen berhenti 48px di atas dasar layar) lalu bandingkan piksel
+  screenshot. Cara itu yang akhirnya membuktikan jalur bawah itu memakai `background-color` `body`,
+  bukan kanvas `html`.
 - **Scrollbar**: disembunyikan lewat `scrollbar-width: none` (Firefox) dan `::-webkit-scrollbar
   { display: none }` (Chromium/WebKit) di `src/app.css`, plus utilitas `.scroll-hide` untuk area
   gulir seperti panel rincian order. Scroll-nya sendiri tetap jalan (swipe, roda mouse, keyboard,
