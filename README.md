@@ -110,10 +110,12 @@ npm run smoke      # uji end-to-end di browser asli (butuh Chrome/Edge terpasang
 ```
 
 `npm run smoke` memakai `playwright-core` dengan browser Chrome/Edge yang sudah ada di sistem
-(tidak mengunduh browser). Hasilnya: 30 pemeriksaan (render, manifest, service worker, anti-zoom
+(tidak mengunduh browser). Hasilnya: 34 pemeriksaan (render, manifest, service worker, anti-zoom
 double tap, halaman terkunci + panel isi yang menggulir, tab bar tidak bergeser saat pindah tab,
 **pita bawah**: geometri iOS standalone ditiru lalu warna pitanya dibandingkan dengan warna tepi
-tab bar langsung dari piksel screenshot — termasuk kontrol yang sengaja bisa gagal, tab baru selalu
+tab bar langsung dari piksel screenshot, ditambah mulusnya transisi badan bar → bibir → pita (latar
+bar diukur dengan ikon/label tab disembunyikan sementara) dan kontrolnya: mask noise dimatikan →
+garis di atas bibir kembali terdeteksi — termasuk kontrol yang sengaja bisa gagal, tab baru selalu
 mulai dari atas, kalkulasi, localStorage, posisi toast, kredit developer, tab
 voucher/riwayat, persistensi setelah reload) dan screenshot ke `tmp/` (`smoke-kalkulator.png`,
 `smoke-kredit.png`, `smoke-riwayat.png`, `smoke-voucher.png`, `pita-*.png`).
@@ -184,7 +186,13 @@ otomatis pada muat ulang berikutnya.
      `--warna-tepi` sudah disamakan);
   3. `body` memakai `background-repeat: no-repeat` supaya lapisan gradasinya tidak pernah terulang di
      jalur itu — dulu, sebelum `html` punya latar, pitanya memang tampil sebagai gradasi body yang
-     terulang (pita cokelat terang yang dikeluhkan pertama kali).
+     terulang (pita cokelat terang yang dikeluhkan pertama kali);
+  4. noise tab bar dipisah ke elemen sendiri (`.tabbar::before`, `z-index: -1` supaya tetap di bawah
+     ikon/label tab, karena tombol tab tidak diposisikan) dan diberi mask `linear-gradient(180deg, ...)`
+     yang **memudarkannya di 1,5rem terakhir** bar. Ini sisa terakhir dari keluhan "belum menyatu":
+     pita sudah sewarna, tapi noise yang menyentuh tepi bawah bar menaikkan warnanya ±13 tingkat
+     (`rgb(41, 26, 19)` di atas bibir `rgb(28, 14, 7)`) sehingga batas bar tetap terbaca sebagai garis.
+     Dengan mask ini latar bar memudar mulus ke `--warna-tepi` di tepinya.
   Gradasi tab bar berakhir di `#251309` supaya setelah lapisan gelap `rgba(0, 0, 0, 0.25)` tepinya
   tampil `#1c0e07`, sama dengan bibir 3px yang rata di bawahnya.
   Detail yang menyertainya: setiap ganti tab `main.scrollTop` direset lewat

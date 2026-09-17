@@ -483,10 +483,31 @@ input[type='number'] {
      #1c0e07 — sama dengan `background-color` body dan `background_color` manifest
      — sehingga area di bawah bar tidak meninggalkan garis warna. */
   .tabbar {
-    background-image: var(--noise), linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(0, 0, 0, 0.25)),
+    background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(0, 0, 0, 0.25)),
       linear-gradient(180deg, #40220f, #251309);
     border-top: 1px solid rgba(255, 214, 124, 0.22);
     box-shadow: 0 -12px 24px -16px rgba(0, 0, 0, 1), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  }
+  /* Noise tab bar dipasang di elemen sendiri (bukan sebagai lapisan background)
+     supaya bisa **memudar** di bagian bawah. Noise yang menyentuh tepi bawah bar
+     menaikkan warnanya ±9 tingkat (mis. rgb(37,23,17) di atas bibir rgb(28,14,7)),
+     dan selisih itu terbaca sebagai garis di antara tab bar dan jalur di bawahnya.
+     Dengan mask ini 1,5rem terakhir bar rata `--warna-tepi`, jadi transisinya mulus. */
+  .tabbar::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background-image: var(--noise);
+    -webkit-mask-image: linear-gradient(180deg, #000 0, #000 calc(100% - 1.5rem), transparent 100%);
+    mask-image: linear-gradient(180deg, #000 0, #000 calc(100% - 1.5rem), transparent 100%);
+    /* z-index negatif: di atas gradasi bar, tapi tetap di bawah ikon/label tab
+       (tombol tab tidak diposisikan, jadi lapisan `position:absolute` akan
+       menimpanya tanpa z-index negatif ini). */
+    z-index: -1;
+    pointer-events: none;
   }
   /* Bibir bawah tab bar: 3px terakhir dibuat rata `--warna-tepi` **tanpa noise**,
      jadi tepi bawah bar tampil sama persis dengan apa pun yang ada di bawahnya

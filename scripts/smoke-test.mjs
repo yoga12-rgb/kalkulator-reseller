@@ -304,6 +304,75 @@ try {
       selisihTepi <= 2,
     `::after ${pita.bibir.tinggi}px @bottom=${pita.bibir.bawah} warna=${pita.bibir.warna}, tepi terukur ${warnaRgb(tepiBar)} (selisih ${selisihTepi.toFixed(1)} dari #1c0e07)`,
   );
+
+  // Latar tab bar diukur tanpa ikon/label tab (tombol disembunyikan sementara),
+  // supaya sampel 1px-nya benar-benar warna latar — bukan campuran ikon emas.
+  const sembunyikanTombol = (sembunyi) =>
+    page.evaluate((hidden) => {
+      document
+        .querySelectorAll('nav[aria-label="Navigasi utama"] .tab-btn')
+        .forEach((el) => (el.style.visibility = hidden ? 'hidden' : ''));
+    }, sembunyi);
+
+  await sembunyikanTombol(true);
+  // Satu baris tepat di atas bibir: noise tab bar harus sudah memudar di situ.
+  // Kalau tidak, tepi bawah bar ±13 tingkat lebih terang dari bibir/pita di
+  // bawahnya, dan garis itu terbaca sebagai "tab bar mengambang".
+  const tepatAtasBibir = await jepretPita(pita.bawah - 4, 1, 'tmp/pita-atas-bibir.png');
+  const lompatBibir = selisihWarna(tepatAtasBibir, isiPita);
+  check(
+    'Badan tab bar tepat di atas bibir rata dengan pita (tanpa garis warna)',
+    lompatBibir <= 4,
+    `1px di atas bibir ${warnaRgb(tepatAtasBibir)} vs pita ${warnaRgb(isiPita)} (selisih ${lompatBibir.toFixed(1)})`,
+  );
+
+  // Gradasi ke arah atas juga tidak boleh melompat — mask noise memudar 1,5rem
+  // terakhir bar, jadi tiap 4px hanya beda sedikit (gradasi wajar, maks ~7).
+  const barisBar = [];
+  for (const jarak of [24, 20, 16, 12, 8]) {
+    barisBar.push(await jepretPita(pita.bawah - jarak, 2, 'tmp/pita-tabbar.png'));
+  }
+  const lompatanBar = Math.max(
+    ...barisBar.slice(1).map((warna, i) => selisihWarna(warna, barisBar[i])),
+    selisihWarna(barisBar[barisBar.length - 1], tepatAtasBibir),
+  );
+  check(
+    'Gradasi tab bar ke atas mulus (noise tidak meninggalkan garis)',
+    lompatanBar <= 10,
+    `latar bar tiap 4px: ${[...barisBar, tepatAtasBibir].map((w) => warnaRgb(w)).join(' | ')} → pita ${warnaRgb(isiPita)}, lompatan maks ${lompatanBar.toFixed(1)}`,
+  );
+
+  // Lapisan noise `::before` harus di bawah ikon/label tab (`z-index: -1`) —
+  // tombol tab tidak diposisikan, jadi tanpa z-index negatif lapisan
+  // `position: absolute` justru menimpa teks & ikonnya.
+  const lapisanNoise = await page.evaluate(() => {
+    const nav = document.querySelector('nav[aria-label="Navigasi utama"]');
+    const gaya = getComputedStyle(nav, '::before');
+    const mask = gaya.webkitMaskImage || gaya.maskImage || '';
+    return { zIndex: gaya.zIndex, posisi: gaya.position, mask: /gradient/.test(mask) };
+  });
+  check(
+    'Noise tab bar dilukis di bawah ikon/label & memudar di tepi bawah',
+    lapisanNoise.zIndex === '-1' && lapisanNoise.posisi === 'absolute' && lapisanNoise.mask,
+    `::before position=${lapisanNoise.posisi}, z-index=${lapisanNoise.zIndex}, mask bergradasi=${lapisanNoise.mask}`,
+  );
+
+  // Kontrol: kalau mask noise dimatikan, garis di atas bibir harus kembali muncul.
+  await page.evaluate(() => {
+    const gaya = document.createElement('style');
+    gaya.id = 'smoke-mask-off';
+    gaya.textContent = 'nav[aria-label="Navigasi utama"]::before{-webkit-mask-image:none;mask-image:none}';
+    document.head.append(gaya);
+  });
+  const atasBibirTanpaMask = await jepretPita(pita.bawah - 4, 1, 'tmp/pita-atas-bibir-tanpa-mask.png');
+  await page.evaluate(() => document.getElementById('smoke-mask-off')?.remove());
+  await sembunyikanTombol(false);
+  const lompatTanpaMask = selisihWarna(atasBibirTanpaMask, isiPita);
+  check(
+    'Kontrol: tanpa mask noise, garis di atas bibir kembali terdeteksi',
+    lompatTanpaMask > lompatBibir + 4,
+    `1px di atas bibir tanpa mask ${warnaRgb(atasBibirTanpaMask)} vs pita ${warnaRgb(isiPita)} (selisih ${lompatTanpaMask.toFixed(1)}, dengan mask ${lompatBibir.toFixed(1)})`,
+  );
   check(
     'Kanvas halaman rata & memakai warna tepi tab bar #1c0e07',
     pita.kanvasWarna === 'rgb(28, 14, 7)' && !pita.kanvasAdaGradasi && pita.bodyAdaGradasi,
