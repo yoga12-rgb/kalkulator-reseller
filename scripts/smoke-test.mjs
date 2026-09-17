@@ -316,8 +316,8 @@ try {
 
   await sembunyikanTombol(true);
   // Satu baris tepat di atas bibir: noise tab bar harus sudah memudar di situ.
-  // Kalau tidak, tepi bawah bar ±13 tingkat lebih terang dari bibir/pita di
-  // bawahnya, dan garis itu terbaca sebagai "tab bar mengambang".
+  // Kalau tidak, tepi bawah bar ±10 tingkat lebih terang (terukur rgb(38,24,17)
+  // vs bibir/pita rgb(28,14,7)) dan garis itu terbaca sebagai "belum menyatu".
   const tepatAtasBibir = await jepretPita(pita.bawah - 4, 1, 'tmp/pita-atas-bibir.png');
   const lompatBibir = selisihWarna(tepatAtasBibir, isiPita);
   check(

@@ -490,9 +490,10 @@ input[type='number'] {
   }
   /* Noise tab bar dipasang di elemen sendiri (bukan sebagai lapisan background)
      supaya bisa **memudar** di bagian bawah. Noise yang menyentuh tepi bawah bar
-     menaikkan warnanya ±9 tingkat (mis. rgb(37,23,17) di atas bibir rgb(28,14,7)),
-     dan selisih itu terbaca sebagai garis di antara tab bar dan jalur di bawahnya.
-     Dengan mask ini 1,5rem terakhir bar rata `--warna-tepi`, jadi transisinya mulus. */
+     menaikkan warnanya ±10 tingkat (terukur rgb(38,24,17) di atas bibir
+     rgb(28,14,7)), dan selisih itu terbaca sebagai garis tipis di antara tab bar
+     dan jalur di bawahnya. Dengan mask ini 1,5rem terakhir bar rata
+     `--warna-tepi`, jadi transisinya mulus (±3,6). */
   .tabbar::before {
     content: '';
     position: absolute;

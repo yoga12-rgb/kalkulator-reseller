@@ -190,9 +190,10 @@ otomatis pada muat ulang berikutnya.
   4. noise tab bar dipisah ke elemen sendiri (`.tabbar::before`, `z-index: -1` supaya tetap di bawah
      ikon/label tab, karena tombol tab tidak diposisikan) dan diberi mask `linear-gradient(180deg, ...)`
      yang **memudarkannya di 1,5rem terakhir** bar. Ini sisa terakhir dari keluhan "belum menyatu":
-     pita sudah sewarna, tapi noise yang menyentuh tepi bawah bar menaikkan warnanya ±13 tingkat
-     (`rgb(41, 26, 19)` di atas bibir `rgb(28, 14, 7)`) sehingga batas bar tetap terbaca sebagai garis.
-     Dengan mask ini latar bar memudar mulus ke `--warna-tepi` di tepinya.
+     pita sudah sewarna, tapi noise yang menyentuh tepi bawah bar menaikkan warnanya ±10 tingkat
+     (terukur `rgb(38, 24, 17)` di atas bibir `rgb(28, 14, 7)`) sehingga batas bar tetap terbaca
+     sebagai garis tipis. Dengan mask ini latar bar memudar mulus ke `--warna-tepi` di tepinya
+     (selisih terukur turun dari 10,5 ke 3,6).
   Gradasi tab bar berakhir di `#251309` supaya setelah lapisan gelap `rgba(0, 0, 0, 0.25)` tepinya
   tampil `#1c0e07`, sama dengan bibir 3px yang rata di bawahnya.
   Detail yang menyertainya: setiap ganti tab `main.scrollTop` direset lewat
