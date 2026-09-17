@@ -18,6 +18,7 @@
   let baris = $state([]);
   let tersalin = $state(false);
   let ujiKanvas = $state(false);
+  let warnaUji = $state('#1c0e07');
   let dvhProbe = $state(null);
   let vhProbe = $state(null);
   let safeTopProbe = $state(null);
@@ -39,19 +40,28 @@
   }
 
   /**
-   * Baris pembanding warna untuk pita di dasar layar. Di iOS pita itu dilukis
-   * **sistem** (di luar jangkauan CSS — terbukti karena kanvas magenta tidak
-   * mengubahnya), jadi warnanya hanya bisa dibaca dengan membandingkan langsung,
-   * lalu disamakan lewat `--warna-tepi` di `src/app.css` + `background_color`
-   * manifest.
+   * Baris pembanding warna untuk pita di dasar layar. Pita itu dilukis **sistem, di
+   * luar halaman** (terbukti di perangkat: kanvas magenta tidak mengubah pitanya),
+   * jadi warnanya tidak bisa diwarnai dari CSS. Yang bisa dilakukan: menyetel
+   * `--warna-tepi` sementara (kanvas `html` + bibir bawah tab bar ikut berubah) lalu
+   * dicari nilai yang membuat **batas** antara tab bar dan pita itu hilang.
    */
   const WARNA_UJI = [
     { nama: '1', hex: '#000000' },
-    { nama: '2', hex: '#160b06' },
-    { nama: '3', hex: '#1c0e07' },
-    { nama: '4', hex: '#2c170e' },
-    { nama: '5', hex: '#3d2114' },
+    { nama: '2', hex: '#120806' },
+    { nama: '3', hex: '#160b06' },
+    { nama: '4', hex: '#1c0e07' },
+    { nama: '5', hex: '#24120b' },
+    { nama: '6', hex: '#2c170e' },
+    { nama: '7', hex: '#3d2114' },
   ];
+
+  /** Setel `--warna-tepi` sementara supaya bisa dibandingkan langsung di perangkat. */
+  function pilihWarna(hex) {
+    warnaUji = hex;
+    document.documentElement.style.setProperty('--warna-tepi', hex);
+    ukur();
+  }
 
   function ukur() {
     const html = document.documentElement;
@@ -82,6 +92,7 @@
       ['selisih layar - innerHeight', `${angka(window.screen.height - window.innerHeight)}`],
       ['scrollY', `${angka(window.scrollY)}`],
       ['kanvas html', getComputedStyle(html).backgroundColor],
+      ['warna tepi (--warna-tepi)', warnaUji],
     ];
   }
 
@@ -119,10 +130,11 @@
       tersalin = false;
     }
   }
-  /** Cat kanvas dari tombol "Uji kanvas" dibersihkan saat panel ditutup. */
+  /** Cat kanvas dari tombol "Uji kanvas" + warna uji dibersihkan saat panel ditutup. */
   $effect(() => () => {
     document.documentElement.style.backgroundColor = '';
     document.documentElement.style.backgroundImage = '';
+    document.documentElement.style.removeProperty('--warna-tepi');
   });
 </script>
 
@@ -135,19 +147,28 @@
 </div>
 
 <!-- Pembanding warna pita bawah: duduk tepat di atas tab bar supaya bisa dibandingkan
-     langsung dengan pita yang dilukis sistem di dasar layar. Pita itu tidak bisa
-     diwarnai dari CSS, jadi warnanya dibaca dengan mata lalu disamakan lewat
-     `--warna-tepi` (src/app.css) + `background_color` manifest. -->
+     langsung dengan pita yang dilukis sistem di dasar layar. Ketuk salah satu baris →
+     `--warna-tepi` (kanvas `html` + bibir bawah tab bar) ikut berubah; nomor yang
+     membuat batas antara tab bar dan pita itu hilang adalah warna pita yang asli. -->
 <div
   class="fixed inset-x-0 z-40"
   style="bottom: calc(7.5rem + env(safe-area-inset-bottom));"
   aria-label="Pembanding warna tepi bawah"
 >
   {#each WARNA_UJI as warna}
-    <div class="flex h-6 items-center justify-between px-3" style="background: {warna.hex};">
-      <span class="text-[9px] font-bold" style="color: rgba(255, 236, 190, 0.65);">{warna.nama}</span>
-      <span class="text-[9px]" style="color: rgba(255, 236, 190, 0.4);">{warna.hex}</span>
-    </div>
+    <button
+      type="button"
+      class="flex h-5 w-full items-center justify-between px-3 text-left"
+      style="background: {warna.hex};"
+      aria-pressed={warnaUji === warna.hex}
+      aria-label={`warna ${warna.nama} ${warna.hex}`}
+      onclick={() => pilihWarna(warna.hex)}
+    >
+      <span class="text-[9px] font-bold" style="color: rgba(255, 248, 220, 0.95);">
+        {warnaUji === warna.hex ? '●' : ''}{warna.nama}
+      </span>
+      <span class="text-[9px]" style="color: rgba(255, 248, 220, 0.5);">{warna.hex}</span>
+    </button>
   {/each}
 </div>
 
@@ -177,6 +198,7 @@
     </div>
   {/each}
   <p class="mt-1 text-[9px] leading-snug text-gold-200/70">
-    Pita di dasar layar: sebut nomor baris warna di atas tab bar yang paling sama.
+    Ketuk baris warna di atas tab bar sampai batas antara tab bar dan pita di dasar layar hilang,
+    lalu sebut nomornya.
   </p>
 </section>

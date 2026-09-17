@@ -526,6 +526,25 @@ try {
     `pita ${warnaRgb(isiNormal)}`,
   );
 
+  // Baris pembanding warna: ketuk nomor 1 (#000000) → `--warna-tepi` ikut berubah,
+  // sehingga bibir bawah tab bar + kanvas langsung jadi hitam (alat ukur warna pita
+  // yang dilukis sistem di perangkat).
+  const barisWarna = page.locator('[aria-label="Pembanding warna tepi bawah"] button');
+  const jumlahWarna = await barisWarna.count();
+  await barisWarna.first().click();
+  await page.waitForTimeout(150);
+  const kanvasHitam = await page.evaluate(
+    () => getComputedStyle(document.documentElement).backgroundColor,
+  );
+  const tepiHitam = await jepretPita(bawahUji - 2, 2, 'tmp/pita-uji-warna.png');
+  check(
+    'Baris pembanding warna menyetel `--warna-tepi` (bibir & kanvas ikut berubah)',
+    jumlahWarna >= 5 && kanvasHitam === 'rgb(0, 0, 0)' && tepiHitam.every((nilai) => nilai < 8),
+    `${jumlahWarna} baris, kanvas ${kanvasHitam}, tepi tab bar ${warnaRgb(tepiHitam)}`,
+  );
+  await barisWarna.nth(3).click(); // kembali ke #1c0e07 (baris ke-4)
+  await page.waitForTimeout(120);
+
   console.log(
     'Screenshot: tmp/smoke-kalkulator.png, tmp/smoke-kredit.png, tmp/smoke-riwayat.png, tmp/smoke-voucher.png',
   );

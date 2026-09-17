@@ -110,7 +110,7 @@ npm run smoke      # uji end-to-end di browser asli (butuh Chrome/Edge terpasang
 ```
 
 `npm run smoke` memakai `playwright-core` dengan browser Chrome/Edge yang sudah ada di sistem
-(tidak mengunduh browser). Hasilnya: 32 pemeriksaan (render, manifest, service worker, anti-zoom
+(tidak mengunduh browser). Hasilnya: 33 pemeriksaan (render, manifest, service worker, anti-zoom
 double tap, halaman terkunci + panel isi yang menggulir, tab bar tidak bergeser saat pindah tab,
 **pita bawah**: geometri iOS standalone ditiru lalu warna pitanya dibandingkan dengan warna tepi
 tab bar langsung dari piksel screenshot — termasuk kontrol yang sengaja bisa gagal, panel
@@ -182,9 +182,10 @@ otomatis pada muat ulang berikutnya.
   2. `background_color` manifest (`#1c0e07`) untuk pita yang dilukis sistem. WebKit menyimpan manifest
      saat ikon dipasang, jadi nilai ini baru terpakai pada ikon yang dipasang ulang (dan menghapus
      ikon juga menghapus localStorage riwayat — jadi hindari kalau bisa);
-  3. panel diagnostik menampilkan **baris pembanding warna** (5 swatch bernomor, tepat di atas tab
-     bar): warna pita di perangkat dibaca dengan mata, lalu `--warna-tepi` + `background_color`
-     disetel ke nilai itu sehingga pita menyatu tanpa perlu memasang ulang ikon.
+  3. panel diagnostik menampilkan **baris pembanding warna** (7 swatch bernomor, tepat di atas tab
+     bar): ketuk barisnya satu per satu sampai batas antara tab bar dan pita hilang, lalu
+     `--warna-tepi` + `background_color` disetel ke nilai itu sehingga pita menyatu tanpa perlu
+     memasang ulang ikon.
   Gradasi tab bar berakhir di `#251309` supaya setelah lapisan gelap `rgba(0, 0, 0, 0.25)` tepinya
   tampil `#1c0e07` di atas bibir 3px yang rata.
   Detail yang menyertainya: setiap ganti tab `main.scrollTop` direset lewat
@@ -204,8 +205,10 @@ otomatis pada muat ulang berikutnya.
   memang kanvas halaman (perbaikan warna kanvas berlaku); kalau tetap gelap, pita itu dilukis sistem
   di luar halaman dan yang menyamakannya adalah warna tepi bawah (`--warna-tepi` +
   `background_color` manifest). Untuk kasus terakhir itu ada
-  **baris pembanding warna** (5 swatch bernomor) tepat di atas tab bar: sebut nomor yang paling sama
-  dengan pitanya. Tekan
+  **baris pembanding warna** (7 swatch bernomor) tepat di atas tab bar: ketuk salah satu barisnya →
+  `--warna-tepi` sementara ikut berubah (kanvas + bibir bawah tab bar), lalu cari nomor yang membuat
+  batas antara tab bar dan pita itu hilang — itulah warna pita yang asli, dan nilai itu yang
+  dipakai permanen. Tekan
   **Salin** untuk menyalin semua baris, atau **Tutup** (panel tidak muncul lagi di sesi itu).
   Dipakai kalau tab bar terlihat mengambang di iPhone. Kalau tidak diperlukan lagi, hapus
   `src/components/ViewportDebug.svelte` beserta pemakaiannya di `App.svelte`.
