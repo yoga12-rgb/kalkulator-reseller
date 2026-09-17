@@ -65,6 +65,21 @@ try {
   });
   check('Service worker terdaftar', Boolean(swScope), swScope ?? 'belum aktif');
 
+  // --- gestur: double tap tidak boleh men-zoom -------------------------
+  const touchActions = await page.evaluate(() => ({
+    html: getComputedStyle(document.documentElement).touchAction,
+    body: getComputedStyle(document.body).touchAction,
+    tombolStepper: getComputedStyle(document.querySelector('.step-btn')).touchAction,
+    inputQty: getComputedStyle(document.querySelector('.qty-input')).touchAction,
+  }));
+  check(
+    'Double tap tidak men-zoom (touch-action: manipulation)',
+    Object.values(touchActions).every((value) => value === 'manipulation'),
+    Object.entries(touchActions)
+      .map(([target, value]) => `${target}=${value}`)
+      .join(', '),
+  );
+
   // --- hitung 6 Sapi Ori + 4 Ayam Ori Mini = 722.000 -> diskon 20% -----
   const plus = (variant) => page.getByLabel(`Tambah ${variant}`, { exact: true });
   for (let i = 0; i < 6; i++) await plus('Sapi Ori').click();

@@ -47,6 +47,9 @@
 html,
 body {
   height: 100%;
+  /* Matikan zoom saat double tap (gestur bawaan browser).
+     Geser (pan) dan pinch-zoom tetap aktif; hanya double tap yang tidak men-zoom. */
+  touch-action: manipulation;
 }
 
 body {
@@ -72,6 +75,8 @@ button,
 select {
   font: inherit;
   color: inherit;
+  /* Tombol/input sering di-tap berulang (stepper +/−) — cegah zoom double tap di sini juga. */
+  touch-action: manipulation;
 }
 
 input[type='number']::-webkit-outer-spin-button,
