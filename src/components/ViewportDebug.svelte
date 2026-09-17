@@ -1,6 +1,8 @@
 <script>
   /**
-   * Panel diagnostik viewport — hanya muncul kalau URL memuat `?debug=1`.
+   * Panel diagnostik viewport — muncul kalau URL memuat `?debug=1`, atau menyala
+   * sendiri ketika layout terukur meleset dari layar (lihat `selisihViewport` di
+   * `App.svelte`).
    *
    * Dipakai untuk masalah layout di iOS: di mode PWA standalone, tinggi `dvh`/`vh`
    * dan nilai `env(safe-area-inset-*)` bisa berbeda dari area yang benar-benar
@@ -8,7 +10,7 @@
    * melaporkan angka aslinya dari perangkat. Hapus berkas ini beserta pemakaiannya
    * di `App.svelte` kalau sudah tidak diperlukan.
    */
-  let { shell = null, tabbar = null } = $props();
+  let { shell = null, tabbar = null, onClose = null } = $props();
 
   let baris = $state([]);
   let tersalin = $state(false);
@@ -44,6 +46,8 @@
       ['tab bar', `${angka(kotakTabbar?.top)} → ${angka(kotakTabbar?.bottom)} (t ${angka(kotakTabbar?.height)})`],
       ['jarak tab bar → dasar layar', `${angka(window.innerHeight - (kotakTabbar?.bottom ?? 0))}`],
       ['jarak tab bar → dasar html', `${angka(html.clientHeight - (kotakTabbar?.bottom ?? 0))}`],
+      ['jarak ke visualViewport', `${angka(window.innerHeight - (vv ? vv.height + vv.offsetTop : window.innerHeight))}`],
+      ['selisih layar - innerHeight', `${angka(window.screen.height - window.innerHeight)}`],
       ['scrollY', `${angka(window.scrollY)}`],
     ];
   }
@@ -99,9 +103,14 @@
 >
   <div class="mb-1 flex items-center justify-between gap-2">
     <p class="font-bold tracking-wide uppercase">Diagnostik viewport</p>
-    <button class="btn btn-brass px-2 py-1 text-[10px]" onclick={salin}>
-      {tersalin ? 'Tersalin' : 'Salin'}
-    </button>
+    <div class="flex items-center gap-1.5">
+      <button class="btn btn-brass px-2 py-1 text-[10px]" onclick={salin}>
+        {tersalin ? 'Tersalin' : 'Salin'}
+      </button>
+      {#if onClose}
+        <button class="btn btn-ghost px-2 py-1 text-[10px]" onclick={onClose}>Tutup</button>
+      {/if}
+    </div>
   </div>
   {#each baris as [label, nilai]}
     <div class="flex items-baseline justify-between gap-3">

@@ -141,6 +141,42 @@ try {
     `posisi tab bar tiap tab: ${navHasil.map((item) => `y=${item.top}/${item.tinggi}px`).join(', ')} (${navKembali.posisi}), batas bawah layar=${navKembali.layar}px`,
   );
 
+  // --- tab bar: latar ikut menutup jalur di bawahnya --------------------
+  const pita = await page.evaluate(async () => {
+    // Tiru keadaan di iOS: tab bar berhenti 34px di atas dasar viewport.
+    const tiruan = document.createElement('style');
+    tiruan.textContent = '.tabbar { bottom: 34px !important; }';
+    document.head.append(tiruan);
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+
+    const nav = document.querySelector('nav[aria-label="Navigasi utama"]');
+    const rect = nav.getBoundingClientRect();
+    const bawah = Math.round(rect.bottom);
+    const titik = document.elementFromPoint(Math.round(window.innerWidth / 2), bawah + 16);
+    const selubung = getComputedStyle(nav, '::after');
+    const hasil = {
+      bawah,
+      layar: window.innerHeight,
+      tertutup: Boolean(titik?.closest('nav')),
+      selubung: selubung.content !== 'none' && selubung.position === 'absolute' && parseFloat(selubung.height) >= 32,
+      kanvas: getComputedStyle(document.body).backgroundColor,
+      tabbarBawah: getComputedStyle(nav).backgroundImage.includes('rgb(37, 19, 9)'),
+    };
+    tiruan.remove();
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    return hasil;
+  });
+  check(
+    'Tab bar tetap menutup jalur di bawahnya (selubung ::after)',
+    pita.tertutup && pita.selubung && pita.bawah + 16 < pita.layar,
+    `tab bar berhenti di ${pita.bawah}px (layar ${pita.layar}px), titik 16px di bawahnya tertutup=${pita.tertutup}, selubung=${pita.selubung}`,
+  );
+  check(
+    'Warna di bawah tab bar menyatu (kanvas & manifest #1c0e07)',
+    pita.kanvas === 'rgb(28, 14, 7)' && pita.tabbarBawah && manifest?.background_color === '#1c0e07',
+    `kanvas=${pita.kanvas}, tepi bawah tab bar #1c0e07=${pita.tabbarBawah}, manifest background_color=${manifest?.background_color}`,
+  );
+
   // --- tab baru selalu mulai dari atas ----------------------------------
   const scrollDalam = () =>
     page.evaluate(() => Math.round(document.querySelector('main').scrollTop));

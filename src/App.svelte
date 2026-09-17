@@ -38,8 +38,39 @@
   let shellEl = $state(null);
   let tabbarEl = $state(null);
 
-  /** Diagnosa viewport (mis. tab bar tampak mengambang di iOS): buka aplikasi dengan `?debug=1`. */
-  const debugViewport = new URLSearchParams(window.location.search).get('debug') === '1';
+  /**
+   * Panel diagnostik viewport (`?debug=1`) — dipakai kalau tab bar tampak
+   * "mengambang" di iPhone. Panel juga menyala sendiri saat layout terukur meleset
+   * dari layar (lihat `selisihViewport`), supaya angkanya bisa dibaca langsung dari
+   * PWA yang sudah terpasang — ikon di layar utama tidak bisa dibuka dengan
+   * tambahan query.
+   */
+  const paksaDebug = new URLSearchParams(window.location.search).get('debug') === '1';
+  let debugViewport = $state(paksaDebug);
+  let debugTutup = $state(false);
+
+  /**
+   * Selisih terjauh antara area yang dijanjikan layout dan kenyataan di perangkat:
+   * - tab bar berhenti di atas dasar layout viewport,
+   * - area terlihat (`visualViewport`) lebih pendek dari layout viewport, atau
+   * - di mode standalone, layar lebih tinggi dari viewport yang dipakai halaman
+   *   (pita home indicator ±34px) — inilah yang dulu bikin tab bar terlihat
+   *   mengambang.
+   * Nilai > 0 berarti ada bagian dasar layar yang tidak ditempati halaman.
+   */
+  function selisihViewport() {
+    const vv = window.visualViewport;
+    const kotakTabbar = tabbarEl?.getBoundingClientRect();
+    const terlihat = vv ? vv.height + vv.offsetTop : window.innerHeight;
+    const standalone =
+      window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+    return Math.max(
+      0,
+      kotakTabbar ? window.innerHeight - kotakTabbar.bottom : 0,
+      window.innerHeight - terlihat,
+      standalone ? window.screen.height - window.innerHeight : 0,
+    );
+  }
 
   const totals = $derived(computeTotals(qtyMap));
   const upgrade = $derived(suggestUpgrade(qtyMap));
@@ -75,6 +106,27 @@
   /** Draft otomatis tersimpan, jadi input tidak hilang saat aplikasi ditutup. */
   $effect(() => {
     store.saveDraft({ qty: qtyMap, customer, note });
+  });
+
+  /**
+   * Nyalakan panel diagnostik sendiri kalau layout meleset dari layar: masalah tab
+   * bar "mengambang" di iPhone jadi bisa dibaca langsung dari PWA yang terpasang,
+   * tanpa perlu membukanya dengan `?debug=1`.
+   */
+  $effect(() => {
+    if (paksaDebug || debugViewport || debugTutup) return;
+    const periksa = () => {
+      if (selisihViewport() > 2) debugViewport = true;
+    };
+    // Ditunggu satu tarikan napas supaya shell & tab bar sempat terukur.
+    const tunda = setTimeout(periksa, 600);
+    window.addEventListener('orientationchange', periksa);
+    window.visualViewport?.addEventListener('resize', periksa);
+    return () => {
+      clearTimeout(tunda);
+      window.removeEventListener('orientationchange', periksa);
+      window.visualViewport?.removeEventListener('resize', periksa);
+    };
   });
 
   function notify(message, tone = 'info') {
@@ -430,6 +482,13 @@
 </div>
 
 {#if debugViewport}
-  <ViewportDebug shell={shellEl} tabbar={tabbarEl} />
+  <ViewportDebug
+    shell={shellEl}
+    tabbar={tabbarEl}
+    onClose={() => {
+      debugTutup = true;
+      debugViewport = false;
+    }}
+  />
 {/if}
 

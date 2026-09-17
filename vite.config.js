@@ -29,7 +29,10 @@ export default defineConfig({
         display_override: ['standalone', 'minimal-ui'],
         orientation: 'portrait',
         theme_color: '#2c170e',
-        background_color: '#2c170e',
+        /* Splash + area yang dilukis sistem (di iOS PWA standalone: pita home
+           indicator di bawah tab bar). Disamakan dengan tepi bawah tab bar
+           (#1c0e07) supaya pita itu menyatu dan bar tidak terlihat mengambang. */
+        background_color: '#1c0e07',
         categories: ['business', 'shopping', 'productivity'],
         icons: [
           { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },

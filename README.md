@@ -23,7 +23,7 @@ Mobile-first, instalable (standalone), dan **jalan offline** — cocok dipakai d
 | Export / Import | Backup riwayat ke file JSON dan gabungkan kembali (dedupe by id) |
 | Draft otomatis | Qty, nama, dan catatan tersimpan tiap perubahan — tidak hilang saat app ditutup |
 | PWA | Manifest + service worker: bisa di-install, cache offline, auto-update |
-| Tab bar diam | Navigasi bawah tidak bergeser saat pindah tab: halaman dikunci, hanya panel isi yang menggulir (`100dvh`) |
+| Tab bar diam | Navigasi bawah tidak bergeser saat pindah tab: halaman dikunci, hanya panel isi yang menggulir (`100dvh`); latar bar diperpanjang sampai dasar layar supaya tidak terlihat mengambang di iPhone |
 | Tanpa zoom tak sengaja | Double tap tidak lagi men-zoom layar (`touch-action: manipulation`); geser & pinch zoom tetap jalan |
 | Tanpa scrollbar | Batang scroll disembunyikan di panel isi maupun panel rincian; gulir tetap jalan |
 
@@ -110,9 +110,10 @@ npm run smoke      # uji end-to-end di browser asli (butuh Chrome/Edge terpasang
 ```
 
 `npm run smoke` memakai `playwright-core` dengan browser Chrome/Edge yang sudah ada di sistem
-(tidak mengunduh browser). Hasilnya: 24 pemeriksaan (render, manifest, service worker, anti-zoom
+(tidak mengunduh browser). Hasilnya: 26 pemeriksaan (render, manifest, service worker, anti-zoom
 double tap, halaman terkunci + panel isi yang menggulir, tab bar tidak bergeser saat pindah tab,
-tab baru selalu mulai dari atas, kalkulasi, localStorage, posisi toast, kredit developer, tab
+latar tab bar tetap menutup jalur di bawahnya + warna kanvas/manifest menyatu, tab baru selalu
+mulai dari atas, kalkulasi, localStorage, posisi toast, kredit developer, tab
 voucher/riwayat, persistensi setelah reload) dan screenshot ke `tmp/` (`smoke-kalkulator.png`,
 `smoke-kredit.png`, `smoke-riwayat.png`, `smoke-voucher.png`).
 
@@ -145,6 +146,10 @@ otomatis pada muat ulang berikutnya.
   (`cocoa`, `gold`, `leaf` + utilitas `emboss`, `plate-gold`, `flyer`, `chip`).
 - **PWA**: `vite-plugin-pwa` (workbox `generateSW`, `navigateFallback: /index.html`) sehingga
   deep link tetap jalan saat offline. Hanya `npm run build` yang menyalakan service worker.
+  `background_color` manifest disamakan dengan tepi bawah tab bar (`#1c0e07`) karena di iOS PWA
+  standalone warna itu juga dipakai untuk pita di bawah area halaman. WebKit menyimpan manifest
+  saat ikon dipasang, jadi kalau nilai ini diubah, hapus lalu pasang ulang ikon
+  "Tambahkan ke Layar Utama" supaya perubahannya ikut terpakai (bagian CSS-nya langsung jalan).
 - **Gestur**: `touch-action: manipulation` dipasang di `html`, `body`, dan kontrol form supaya
   **double tap tidak men-zoom**. Sesuai spesifikasi, browser meng-intersect `touch-action` elemen
   yang disentuh dengan leluhurnya, jadi cukup di elemen teratas. Pinch zoom sengaja dibiarkan
@@ -159,20 +164,32 @@ otomatis pada muat ulang berikutnya.
   toolbar tidak punya alasan berubah, jadi tab bar (`fixed bottom-0`, selebar `max-w-md` di
   tengah) tetap diam. Tab bar sengaja dibiarkan `fixed`, bukan `sticky` di dalam aliran shell:
   tepi bawah layout viewport di iOS bisa berhenti ± 34px di atas dasar layar (pita home
-  indicator), sehingga elemen yang mengalir di dalam shell tampak "mengambang" — `fixed`
-  dijangkar ke dasar area yang benar-benar terlihat sehingga latar tab bar ikut menutup pita itu.
+  indicator), sehingga elemen yang mengalir di dalam shell tampak "mengambang". Elemen `fixed`
+  dijangkar ke tepi yang paling bawah yang dicapai layout, jadi supaya bar-nya tetap terlihat
+  menempel ke dasar layar ada dua jaring pengaman:
+  1. `.tabbar::after` memperpanjang latar bar ke bawah melewati kotaknya (± 8rem) — jalur kosong
+     di bawah bar masih bagian kanvas halaman, jadi bisa ditutup latar bar itu sendiri (kalau bar
+     sudah menempel dasar layar, bagian ini terpotong tepi layar dan tidak terlihat);
+  2. warnanya disamakan — gradasi tab bar sengaja berakhir di `#251309` supaya setelah lapisan
+     gelap `rgba(0, 0, 0, 0.25)` tepinya tampil tepat `#1c0e07`, sama dengan `background-color`
+     `body` **dan** `background_color` manifest. Apa pun yang muncul di bawah bar (kanvas halaman
+     atau pita yang dilukis sistem di PWA standalone) jadi berwarna sama dan tidak meninggalkan
+     garis.
   Detail yang menyertainya: setiap ganti tab `main.scrollTop` direset lewat
   `$effect` (tab baru selalu mulai dari atas), padding bawah panel isi
   `calc(10rem + env(safe-area-inset-bottom))` — cukup untuk bar total 68px + tab bar 76px, dan
   tidak lagi menutup konten terakhir di iPhone berponi seperti `pb-40` dulu — `background-attachment:
   fixed` dihapus (halaman tidak digulir lagi), dan batas tinggi sheet rincian pakai `dvh` (`.sheet-max`).
 - **Diagnostik viewport**: buka aplikasi dengan `?debug=1` (mis. `https://<domain>/?debug=1`) untuk
-  menampilkan panel angka `innerHeight`, `visualViewport`, `100dvh`/`100vh`, `env(safe-area-inset-*)`,
-  serta posisi shell & tab bar. Dipakai kalau tab bar terlihat mengambang, karena di iOS PWA
-  standalone angka-angka itu bisa berbeda dari area yang benar-benar terlihat. Di iPhone, buka URL
-  debug lewat Safari lalu "Tambahkan ke Layar Utama" supaya panel muncul di mode standalone (ikon
-  app biasa tidak bisa dibuka dengan query tambahan, dan PWA punya penyimpanan sendiri). Kalau tidak
-  diperlukan lagi, hapus `src/components/ViewportDebug.svelte` beserta pemakaiannya di `App.svelte`.
+  memaksa panel angka `innerHeight`, `visualViewport`, `100dvh`/`100vh`, `env(safe-area-inset-*)`,
+  `jarak ke visualViewport`, `selisih layar − innerHeight`, serta posisi shell & tab bar. Panel ini
+  **juga menyala sendiri** kalau `selisihViewport()` di `App.svelte` mengukur layout meleset > 2px
+  dari layar (tab bar tidak menempel dasar viewport, area terlihat lebih pendek, atau di mode
+  standalone layar lebih tinggi dari viewport) — jadi angkanya bisa dibaca langsung dari PWA yang
+  sudah terpasang, karena ikon di layar utama tidak bisa dibuka dengan query tambahan. Tekan
+  **Salin** untuk menyalin semua baris, atau **Tutup** (panel tidak muncul lagi di sesi itu).
+  Dipakai kalau tab bar terlihat mengambang di iPhone. Kalau tidak diperlukan lagi, hapus
+  `src/components/ViewportDebug.svelte` beserta pemakaiannya di `App.svelte`.
 - **Scrollbar**: disembunyikan lewat `scrollbar-width: none` (Firefox) dan `::-webkit-scrollbar
   { display: none }` (Chromium/WebKit) di `src/app.css`, plus utilitas `.scroll-hide` untuk area
   gulir seperti panel rincian order. Scroll-nya sendiri tetap jalan (swipe, roda mouse, keyboard,

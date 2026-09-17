@@ -83,7 +83,11 @@ body {
   margin: 0;
   font-family: var(--font-body);
   color: var(--color-paper-100);
-  background-color: var(--color-cocoa-900);
+  /* Warna kanvas = warna tepi bawah tab bar (#1c0e07). Di iOS tepi bawah area yang
+     bisa dicapai layout kadang berhenti ±34px di atas dasar layar (pita home
+     indicator); area sisa di bawah kotak halaman itu diwarnai kanvas, jadi dengan
+     warna yang sama tab bar tidak terlihat "mengambang" di atas jalur berbeda. */
+  background-color: #1c0e07;
   background-image:
     var(--noise),
     radial-gradient(120% 70% at 50% -10%, rgba(255, 214, 124, 0.18), transparent 62%),
@@ -446,11 +450,30 @@ input[type='number'] {
   }
 
   /* ----------------------------------------------------------- tab bar */
+  /* Warna gradasi paling bawah sengaja #251309, bukan #1c0e07: lapisan gelap
+     rgba(0, 0, 0, 0.25) di atasnya membuat tepi bawah tab bar tampil tepat
+     #1c0e07 — sama dengan `background-color` body dan `background_color` manifest
+     — sehingga area di bawah bar tidak meninggalkan garis warna. */
   .tabbar {
     background-image: var(--noise), linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(0, 0, 0, 0.25)),
-      linear-gradient(180deg, #40220f, #1c0e07);
+      linear-gradient(180deg, #40220f, #251309);
     border-top: 1px solid rgba(255, 214, 124, 0.22);
     box-shadow: 0 -12px 24px -16px rgba(0, 0, 0, 1), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  }
+  /* Selubung bawah: latar tab bar diperpanjang ke bawah melewati kotaknya.
+     Elemen `fixed` hanya bisa menempel sampai tepi bawah yang dicapai layout
+     (±34px di atas dasar layar di iOS), sementara jalur di bawahnya masih bagian
+     kanvas halaman — dulu di situlah tab bar tampak mengambang. Selubung ini
+     menutup jalur tersebut dengan warna yang sama; kalau tab bar sudah menempel
+     dasar layar, bagian ini terpotong tepi layar dan tidak terlihat. */
+  .tabbar::after {
+    content: '';
+    position: absolute;
+    top: calc(100% - 1px);
+    right: 0;
+    left: 0;
+    height: 8rem;
+    background-image: var(--noise), linear-gradient(180deg, #1c0e07, #1c0e07 45%, #160b06);
   }
   .tab-btn {
     flex: 1;
