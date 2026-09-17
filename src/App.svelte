@@ -49,6 +49,21 @@
     }).filter((group) => group.items.length > 0);
   });
 
+  /** Panel isi yang menggulir — satu-satunya area gulir di aplikasi. */
+  let mainEl = $state(null);
+  let previousTab = tab;
+
+  /**
+   * Setiap ganti tab, panel isi kembali ke atas supaya tab baru tidak mewarisi
+   * posisi gulir tab sebelumnya (dulu ini terjadi otomatis karena seluruh
+   * halaman yang menggulir dan browser meng-clamp posisinya).
+   */
+  $effect(() => {
+    if (tab === previousTab) return;
+    previousTab = tab;
+    mainEl?.scrollTo({ top: 0 });
+  });
+
   /** Draft otomatis tersimpan, jadi input tidak hilang saat aplikasi ditutup. */
   $effect(() => {
     store.saveDraft({ qty: qtyMap, customer, note });
@@ -217,8 +232,8 @@
   });
 </script>
 
-<div class="flex min-h-full justify-center">
-  <div class="relative flex w-full max-w-md flex-col">
+<div class="flex min-h-dvh justify-center">
+  <div class="relative flex h-dvh w-full max-w-md flex-col">
     <AppHeader
       installable={!!installEvent}
       onInstall={installApp}
@@ -226,7 +241,10 @@
       onReload={() => window.location.reload()}
     />
 
-    <main class="safe-x flex-1 space-y-3 px-3 pt-3 pb-40">
+    <main
+      bind:this={mainEl}
+      class="safe-x min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-3 pt-3 pb-[calc(10rem+env(safe-area-inset-bottom))]"
+    >
       {#if tab === 'hitung'}
         <!-- Panel pencarian + status cepat -->
         <section class="panel-raised p-3">
@@ -334,7 +352,7 @@
     {/if}
 
     <nav
-      class="tabbar safe-bottom fixed bottom-0 left-1/2 z-30 flex w-full max-w-md -translate-x-1/2 items-stretch gap-1 px-2 pt-1"
+      class="tabbar safe-bottom sticky bottom-0 z-30 flex flex-none items-stretch gap-1 px-2 pt-1"
       aria-label="Navigasi utama"
     >
       <button

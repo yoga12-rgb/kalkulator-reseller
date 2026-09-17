@@ -52,6 +52,33 @@ body {
   touch-action: manipulation;
 }
 
+/* ------------------------------------------------------------------
+   App shell: hanya panel isi (<main>) yang menggulir, halaman tidak.
+
+   Di iPhone tinggi `100%`/`vh` tidak sama dengan area yang benar-benar
+   terlihat: toolbar Safari ikut muncul/ciut saat halaman digulir, dan
+   tinggi viewport berubah mengikuti animasi itu. Akibatnya elemen
+   `fixed` (tab bar) naik-turun — apalagi karena pindah tab meng-clamp
+   posisi gulir halaman sehingga toolbar beranimasi lagi.
+
+   `100dvh` selalu sama dengan area yang terlihat, dan begitu halaman
+   dikunci (tidak bisa digulir), toolbar tidak punya alasan berubah.
+   Browser lama yang belum mengenal `dvh` tetap memakai perilaku semula
+   (`height: 100%` + halaman menggulir) — lihat gate `@supports` di bawah.
+   ------------------------------------------------------------------ */
+@supports (height: 100dvh) {
+  html,
+  body,
+  #app {
+    height: 100dvh;
+  }
+
+  html,
+  body {
+    overflow: hidden;
+  }
+}
+
 body {
   margin: 0;
   font-family: var(--font-body);
@@ -61,7 +88,8 @@ body {
     var(--noise),
     radial-gradient(120% 70% at 50% -10%, rgba(255, 214, 124, 0.18), transparent 62%),
     linear-gradient(180deg, #3a1e12 0%, #2c170e 46%, #160b06 100%);
-  background-attachment: fixed;
+  /* Tidak perlu `background-attachment: fixed` lagi: halaman tidak digulir,
+     jadi latarnya otomatis diam (dan iOS tidak perlu repaint tiap gulir). */
   overscroll-behavior-y: none;
 }
 
@@ -492,6 +520,12 @@ input[type='number'] {
 .safe-x {
   padding-left: max(0.75rem, env(safe-area-inset-left));
   padding-right: max(0.75rem, env(safe-area-inset-right));
+}
+/* Batas tinggi panel yang menempel di bawah (sheet rincian): `dvh` supaya di
+   iOS tidak terpotong toolbar; `vh` dipakai browser yang belum mengenal dvh. */
+.sheet-max {
+  max-height: 90vh;
+  max-height: 90dvh;
 }
 .tap-none {
   touch-action: manipulation;

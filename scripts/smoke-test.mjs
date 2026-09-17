@@ -80,6 +80,27 @@ try {
       .join(', '),
   );
 
+  // --- app shell: halaman tidak menggulir, hanya panel isi --------------
+  const shell = await page.evaluate(() => {
+    const html = document.documentElement;
+    const main = document.querySelector('main');
+    return {
+      dokumenBisaScroll: html.scrollHeight > html.clientHeight + 1,
+      scrollY: Math.round(window.scrollY),
+      tinggiShell: Math.round(document.querySelector('#app > div > div').getBoundingClientRect().height),
+      tinggiLayar: html.clientHeight,
+      mainOverflowY: getComputedStyle(main).overflowY,
+    };
+  });
+  check(
+    'Halaman terkunci, panel isi yang menggulir (tab bar stabil di iOS)',
+    !shell.dokumenBisaScroll &&
+      shell.scrollY === 0 &&
+      shell.mainOverflowY === 'auto' &&
+      shell.tinggiShell === shell.tinggiLayar,
+    `halaman bisa di-scroll=${shell.dokumenBisaScroll}, scrollY=${shell.scrollY}, tinggi shell=${shell.tinggiShell}px = layar ${shell.tinggiLayar}px, overflow panel=${shell.mainOverflowY}`,
+  );
+
   // --- hitung 6 Sapi Ori + 4 Ayam Ori Mini = 722.000 -> diskon 20% -----
   const plus = (variant) => page.getByLabel(`Tambah ${variant}`, { exact: true });
   for (let i = 0; i < 6; i++) await plus('Sapi Ori').click();
@@ -87,6 +108,59 @@ try {
 
   await page.waitForSelector('text=Rp577.600');
   check('Total bayar diskon 20% = Rp577.600', true);
+
+  // --- tab bar: tidak bergeser saat pindah tab --------------------------
+  const navNow = () =>
+    page.evaluate(() => {
+      const nav = document.querySelector('nav[aria-label="Navigasi utama"]');
+      const rect = nav.getBoundingClientRect();
+      return {
+        top: Math.round(rect.top * 10) / 10,
+        tinggi: Math.round(rect.height * 10) / 10,
+        posisi: getComputedStyle(nav).position,
+        scrollY: Math.round(window.scrollY),
+        layar: document.documentElement.clientHeight,
+      };
+    });
+
+  const navHasil = [];
+  for (const nama of ['Voucher', /^Riwayat/, 'Hitung']) {
+    await page.getByRole('button', { name: nama, exact: true }).click();
+    await page.waitForTimeout(150);
+    navHasil.push(await navNow());
+  }
+  await page.waitForTimeout(100);
+  const navKembali = await navNow();
+  const navSama = [...navHasil, navKembali].every(
+    (item) => item.top === navHasil[0].top && item.tinggi === navHasil[0].tinggi,
+  );
+  const navRapi = navKembali.top + navKembali.tinggi <= navKembali.layar + 1 && navKembali.top >= navKembali.layar - 140;
+  check(
+    'Tab bar tidak bergeser saat pindah tab',
+    navSama && navRapi && navHasil.every((item) => item.scrollY === 0),
+    `posisi tab bar tiap tab: ${navHasil.map((item) => `y=${item.top}/${item.tinggi}px`).join(', ')} (${navKembali.posisi}), batas bawah layar=${navKembali.layar}px`,
+  );
+
+  // --- tab baru selalu mulai dari atas ----------------------------------
+  const scrollDalam = () =>
+    page.evaluate(() => Math.round(document.querySelector('main').scrollTop));
+  await page.evaluate(() => {
+    const main = document.querySelector('main');
+    main.scrollTo({ top: main.scrollHeight });
+  });
+  await page.waitForTimeout(150);
+  const scrollBawah = await scrollDalam();
+  await page.getByRole('button', { name: 'Voucher', exact: true }).click();
+  await page.waitForTimeout(150);
+  const scrollVoucher = await scrollDalam();
+  await page.getByRole('button', { name: 'Hitung', exact: true }).click();
+  await page.waitForTimeout(150);
+  const scrollHitung = await scrollDalam();
+  check(
+    'Tab baru selalu terbuka dari atas',
+    scrollBawah > 0 && scrollVoucher === 0 && scrollHitung === 0,
+    `panel isi: bawah=${scrollBawah}px, setelah ke Voucher=${scrollVoucher}px, kembali ke Hitung=${scrollHitung}px`,
+  );
 
   const draft = await page.evaluate(() => JSON.parse(localStorage.getItem('rajaklana.draft.v1') ?? '{}'));
   check(
@@ -117,11 +191,13 @@ try {
   const bars = await page.evaluate(() => {
     const html = document.documentElement;
     const panel = document.querySelector('.scroll-hide');
+    const main = document.querySelector('main');
     return {
       htmlCss: getComputedStyle(html).scrollbarWidth,
       bodyCss: getComputedStyle(document.body).scrollbarWidth,
       gutter: window.innerWidth - html.clientWidth,
-      bisaScroll: html.scrollHeight > html.clientHeight,
+      mainCss: getComputedStyle(main).scrollbarWidth,
+      mainBisaScroll: main.scrollHeight > main.clientHeight,
       panelCss: panel ? getComputedStyle(panel).scrollbarWidth : null,
     };
   });
@@ -130,9 +206,10 @@ try {
     bars.htmlCss === 'none' &&
       bars.bodyCss === 'none' &&
       bars.gutter === 0 &&
-      bars.bisaScroll &&
+      bars.mainCss === 'none' &&
+      bars.mainBisaScroll &&
       bars.panelCss === 'none',
-    `html=${bars.htmlCss}, body=${bars.bodyCss}, batang halaman=${bars.gutter}px, halaman bisa di-scroll=${bars.bisaScroll}, panel rincian=${bars.panelCss}`,
+    `html=${bars.htmlCss}, body=${bars.bodyCss}, batang halaman=${bars.gutter}px, panel isi bisa di-scroll=${bars.mainBisaScroll}, panel rincian=${bars.panelCss}`,
   );
 
   await page.getByPlaceholder('cth: Bu Rina - Bandung').fill('Bu Rina - Bandung');
@@ -185,7 +262,10 @@ try {
   await page.screenshot({ path: resolve(ROOT, 'tmp/smoke-kalkulator.png') });
 
   // --- kredit developer ------------------------------------------------
-  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+  await page.evaluate(() => {
+    const main = document.querySelector('main');
+    main.scrollTo({ top: main.scrollHeight });
+  });
   await page.waitForTimeout(150);
 
   const credit = page.locator('footer a[href="https://www.instagram.com/mang.agooy/"]');
@@ -193,13 +273,19 @@ try {
   const creditBox = creditFound ? await credit.first().boundingBox() : null;
   const creditText = creditFound ? (await credit.first().innerText()).replace(/\s+/g, ' ').trim() : '';
   const viewportHeight = page.viewportSize()?.height ?? 0;
+  const barTotalBox = await page.getByRole('button', { name: /Lihat rincian order/ }).boundingBox();
 
   check(
     'Kredit developer "Yoga Septriana" + link Instagram tampil utuh',
     Boolean(creditBox) &&
       creditText.includes('Yoga Septriana') &&
-      creditBox.y + creditBox.height <= viewportHeight,
-    creditBox ? `${creditText} @ y=${Math.round(creditBox.y)}, tinggi viewport=${viewportHeight}` : 'link tidak ditemukan',
+      creditBox.y + creditBox.height <= viewportHeight &&
+      (!barTotalBox || creditBox.y + creditBox.height <= barTotalBox.y),
+    creditBox
+      ? `${creditText} @ y=${Math.round(creditBox.y)}, tinggi viewport=${viewportHeight}, bar total mulai y=${
+          barTotalBox ? Math.round(barTotalBox.y) : 'tidak tampil'
+        }`
+      : 'link tidak ditemukan',
   );
   await page.screenshot({ path: resolve(ROOT, 'tmp/smoke-kredit.png') });
 

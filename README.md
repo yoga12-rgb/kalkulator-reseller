@@ -23,8 +23,9 @@ Mobile-first, instalable (standalone), dan **jalan offline** — cocok dipakai d
 | Export / Import | Backup riwayat ke file JSON dan gabungkan kembali (dedupe by id) |
 | Draft otomatis | Qty, nama, dan catatan tersimpan tiap perubahan — tidak hilang saat app ditutup |
 | PWA | Manifest + service worker: bisa di-install, cache offline, auto-update |
+| Tab bar diam | Navigasi bawah tidak bergeser saat pindah tab: halaman dikunci, hanya panel isi yang menggulir (`100dvh`) |
 | Tanpa zoom tak sengaja | Double tap tidak lagi men-zoom layar (`touch-action: manipulation`); geser & pinch zoom tetap jalan |
-| Tanpa scrollbar | Batang scroll disembunyikan di halaman maupun panel rincian; gulir tetap jalan |
+| Tanpa scrollbar | Batang scroll disembunyikan di panel isi maupun panel rincian; gulir tetap jalan |
 
 ## Aturan Diskon (Voucher Reseller)
 
@@ -63,7 +64,7 @@ Ambang diskon ada di `src/lib/pricing.js` (`TIERS`).
 ```
 src/
   main.js                     bootstrap + register service worker (virtual:pwa-register)
-  App.svelte                  shell aplikasi + 3 tab (Hitung / Voucher / Riwayat)
+  App.svelte                  shell aplikasi (halaman terkunci, tinggi `100dvh`) + 3 tab (Hitung / Voucher / Riwayat)
   app.css                     tema skeuomorphik (gradien, emboss, kancing berkilau)
   lib/
     catalog.js                kategori, varian, harga
@@ -109,8 +110,9 @@ npm run smoke      # uji end-to-end di browser asli (butuh Chrome/Edge terpasang
 ```
 
 `npm run smoke` memakai `playwright-core` dengan browser Chrome/Edge yang sudah ada di sistem
-(tidak mengunduh browser). Hasilnya: 21 pemeriksaan (render, manifest, service worker, anti-zoom
-double tap, scrollbar tersembunyi, kalkulasi, localStorage, posisi toast, kredit developer, tab
+(tidak mengunduh browser). Hasilnya: 24 pemeriksaan (render, manifest, service worker, anti-zoom
+double tap, halaman terkunci + panel isi yang menggulir, tab bar tidak bergeser saat pindah tab,
+tab baru selalu mulai dari atas, kalkulasi, localStorage, posisi toast, kredit developer, tab
 voucher/riwayat, persistensi setelah reload) dan screenshot ke `tmp/` (`smoke-kalkulator.png`,
 `smoke-kredit.png`, `smoke-riwayat.png`, `smoke-voucher.png`).
 
@@ -148,6 +150,19 @@ otomatis pada muat ulang berikutnya.
   yang disentuh dengan leluhurnya, jadi cukup di elemen teratas. Pinch zoom sengaja dibiarkan
   aktif demi aksesibilitas; kalau ingin dikunci total, tambahkan `user-scalable=no` di meta
   viewport (iOS mengabaikannya, jadi `touch-action` tetap yang menentukan).
+- **App shell (halaman terkunci)**: `html`/`body` setinggi `100dvh` + `overflow: hidden` di
+  `src/app.css` (dibungkus `@supports (height: 100dvh)`, jadi browser lama tetap memakai perilaku
+  semula: halaman yang menggulir), lalu `<main>` (`overflow-y-auto overscroll-contain`) jadi
+  satu-satunya area gulir. Alasannya: di iOS toolbar Safari berubah tinggi mengikuti gulir
+  halaman, dan tinggi viewport yang ikut berubah itulah yang menggeser tab bar — dulu tab bar
+  `position: fixed` di dasar viewport, sementara pindah tab meng-clamp posisi gulir halaman
+  sehingga toolbar beranimasi lagi tiap pindah tab. Dengan halaman terkunci + tinggi `dvh`,
+  toolbar tidak punya alasan berubah dan tab bar ikut mengalir di dalam shell (`sticky`, lebar
+  shell yang sudah `max-w-md`). Detail yang menyertainya: setiap ganti tab `main.scrollTop`
+  direset lewat `$effect` (tab baru selalu mulai dari atas), padding bawah panel isi
+  `calc(10rem + env(safe-area-inset-bottom))` — cukup untuk bar total 68px + tab bar 76px, dan
+  tidak lagi menutup konten terakhir di iPhone berponi seperti `pb-40` dulu — `background-attachment:
+  fixed` dihapus (halaman tidak digulir lagi), dan batas tinggi sheet rincian pakai `dvh` (`.sheet-max`).
 - **Scrollbar**: disembunyikan lewat `scrollbar-width: none` (Firefox) dan `::-webkit-scrollbar
   { display: none }` (Chromium/WebKit) di `src/app.css`, plus utilitas `.scroll-hide` untuk area
   gulir seperti panel rincian order. Scroll-nya sendiri tetap jalan (swipe, roda mouse, keyboard,
