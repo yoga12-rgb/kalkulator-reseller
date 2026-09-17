@@ -107,9 +107,10 @@ npm run smoke      # uji end-to-end di browser asli (butuh Chrome/Edge terpasang
 ```
 
 `npm run smoke` memakai `playwright-core` dengan browser Chrome/Edge yang sudah ada di sistem
-(tidak mengunduh browser). Hasilnya: 18 pemeriksaan (render, manifest, service worker, kalkulasi,
-localStorage, posisi toast, tab voucher/riwayat, persistensi setelah reload) dan screenshot
-ke `tmp/` (`smoke-kalkulator.png`, `smoke-voucher.png`, `smoke-riwayat.png`).
+(tidak mengunduh browser). Hasilnya: 19 pemeriksaan (render, manifest, service worker, kalkulasi,
+localStorage, posisi toast, kredit developer, tab voucher/riwayat, persistensi setelah reload) dan
+screenshot ke `tmp/` (`smoke-kalkulator.png`, `smoke-kredit.png`, `smoke-riwayat.png`,
+`smoke-voucher.png`).
 
 ```bash
 npm run icons      # regenerate public/icons/*.png dan public/favicon-64.png
@@ -143,3 +144,12 @@ otomatis pada muat ulang berikutnya.
 - **Data**: semua perhitungan & riwayat berjalan lokal di perangkat (localStorage), tidak ada server
   dan tidak ada data yang dikirim keluar.
 - **Format angka**: `Intl.NumberFormat('id-ID')` → `Rp577.600`, tanggal `id-ID`.
+
+## Kredit
+
+Dibuat dan dikembangkan oleh **Yoga Septriana** — Instagram
+[@mang.agooy](https://www.instagram.com/mang.agooy/).
+
+Kredit ini juga tampil di dalam aplikasi (footer di tiap tab: Hitung / Voucher / Riwayat) dan
+tertaut langsung ke Instagram tersebut. Metadata pengarang juga tersimpan di `package.json`
+(`author`) dan `index.html` (`meta name="author"`).

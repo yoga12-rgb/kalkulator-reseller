@@ -146,7 +146,29 @@ try {
   await page.getByRole('button', { name: 'Hitung', exact: true }).click();
   await page.waitForSelector('text=Rp577.600');
   await page.screenshot({ path: resolve(ROOT, 'tmp/smoke-kalkulator.png') });
-  console.log('Screenshot: tmp/smoke-kalkulator.png, tmp/smoke-riwayat.png');
+
+  // --- kredit developer ------------------------------------------------
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+  await page.waitForTimeout(150);
+
+  const credit = page.locator('footer a[href="https://www.instagram.com/mang.agooy/"]');
+  const creditFound = (await credit.count()) === 1;
+  const creditBox = creditFound ? await credit.first().boundingBox() : null;
+  const creditText = creditFound ? (await credit.first().innerText()).replace(/\s+/g, ' ').trim() : '';
+  const viewportHeight = page.viewportSize()?.height ?? 0;
+
+  check(
+    'Kredit developer "Yoga Septriana" + link Instagram tampil utuh',
+    Boolean(creditBox) &&
+      creditText.includes('Yoga Septriana') &&
+      creditBox.y + creditBox.height <= viewportHeight,
+    creditBox ? `${creditText} @ y=${Math.round(creditBox.y)}, tinggi viewport=${viewportHeight}` : 'link tidak ditemukan',
+  );
+  await page.screenshot({ path: resolve(ROOT, 'tmp/smoke-kredit.png') });
+
+  console.log(
+    'Screenshot: tmp/smoke-kalkulator.png, tmp/smoke-kredit.png, tmp/smoke-riwayat.png, tmp/smoke-voucher.png',
+  );
 } finally {
   await browser.close();
 }

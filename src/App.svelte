@@ -313,6 +313,20 @@
           onImport={importHistory}
         />
       {/if}
+
+      <!-- Kredit developer -->
+      <footer class="pt-1 text-center">
+        <a
+          class="inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-[11px] font-bold text-gold-200/75 underline decoration-dotted underline-offset-2 transition-colors hover:text-gold-100 tap-none"
+          href="https://www.instagram.com/mang.agooy/"
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Instagram @mang.agooy"
+        >
+          <Icon name="instagram" size={14} />
+          Dibuat oleh Yoga Septriana · @mang.agooy
+        </a>
+      </footer>
     </main>
 
     {#if tab === 'hitung' && !totals.isEmpty}

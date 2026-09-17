@@ -7,6 +7,7 @@
     "node": "22.x"
   },
   "description": "Kalkulator diskon reseller Rajaklana - SPA PWA (Svelte + Tailwind)",
+  "author": "Yoga Septriana (https://www.instagram.com/mang.agooy/)",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
