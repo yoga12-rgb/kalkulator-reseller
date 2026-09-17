@@ -24,6 +24,7 @@ Mobile-first, instalable (standalone), dan **jalan offline** — cocok dipakai d
 | Draft otomatis | Qty, nama, dan catatan tersimpan tiap perubahan — tidak hilang saat app ditutup |
 | PWA | Manifest + service worker: bisa di-install, cache offline, auto-update |
 | Tanpa zoom tak sengaja | Double tap tidak lagi men-zoom layar (`touch-action: manipulation`); geser & pinch zoom tetap jalan |
+| Tanpa scrollbar | Batang scroll disembunyikan di halaman maupun panel rincian; gulir tetap jalan |
 
 ## Aturan Diskon (Voucher Reseller)
 
@@ -108,10 +109,10 @@ npm run smoke      # uji end-to-end di browser asli (butuh Chrome/Edge terpasang
 ```
 
 `npm run smoke` memakai `playwright-core` dengan browser Chrome/Edge yang sudah ada di sistem
-(tidak mengunduh browser). Hasilnya: 20 pemeriksaan (render, manifest, service worker, anti-zoom
-double tap, kalkulasi, localStorage, posisi toast, kredit developer, tab voucher/riwayat,
-persistensi setelah reload) dan screenshot ke `tmp/` (`smoke-kalkulator.png`, `smoke-kredit.png`,
-`smoke-riwayat.png`, `smoke-voucher.png`).
+(tidak mengunduh browser). Hasilnya: 21 pemeriksaan (render, manifest, service worker, anti-zoom
+double tap, scrollbar tersembunyi, kalkulasi, localStorage, posisi toast, kredit developer, tab
+voucher/riwayat, persistensi setelah reload) dan screenshot ke `tmp/` (`smoke-kalkulator.png`,
+`smoke-kredit.png`, `smoke-riwayat.png`, `smoke-voucher.png`).
 
 ```bash
 npm run icons      # regenerate public/icons/*.png dan public/favicon-64.png
@@ -147,6 +148,11 @@ otomatis pada muat ulang berikutnya.
   yang disentuh dengan leluhurnya, jadi cukup di elemen teratas. Pinch zoom sengaja dibiarkan
   aktif demi aksesibilitas; kalau ingin dikunci total, tambahkan `user-scalable=no` di meta
   viewport (iOS mengabaikannya, jadi `touch-action` tetap yang menentukan).
+- **Scrollbar**: disembunyikan lewat `scrollbar-width: none` (Firefox) dan `::-webkit-scrollbar
+  { display: none }` (Chromium/WebKit) di `src/app.css`, plus utilitas `.scroll-hide` untuk area
+  gulir seperti panel rincian order. Scroll-nya sendiri tetap jalan (swipe, roda mouse, keyboard,
+  `PageDown`); yang hilang hanya batangnya, sekaligus menghindari konten bergeser saat daftar
+  pendek/panjang bergantian.
 - **Data**: semua perhitungan & riwayat berjalan lokal di perangkat (localStorage), tidak ada server
   dan tidak ada data yang dikirim keluar.
 - **Format angka**: `Intl.NumberFormat('id-ID')` → `Rp577.600`, tanggal `id-ID`.

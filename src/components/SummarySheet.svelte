@@ -27,7 +27,7 @@
     ></button>
 
     <div
-      class="animate-rise scroll-slim safe-bottom relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-t-3xl p-3 panel-raised"
+      class="animate-rise scroll-hide safe-bottom relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-t-3xl p-3 panel-raised"
       role="dialog"
       aria-modal="true"
       aria-label="Rincian order"

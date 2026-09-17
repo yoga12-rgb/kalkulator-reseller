@@ -113,6 +113,28 @@ try {
   await page.waitForSelector('text=Rincian Order');
   check('Sheet rincian terbuka', true);
 
+  // --- scrollbar disembunyikan -----------------------------------------
+  const bars = await page.evaluate(() => {
+    const html = document.documentElement;
+    const panel = document.querySelector('.scroll-hide');
+    return {
+      htmlCss: getComputedStyle(html).scrollbarWidth,
+      bodyCss: getComputedStyle(document.body).scrollbarWidth,
+      gutter: window.innerWidth - html.clientWidth,
+      bisaScroll: html.scrollHeight > html.clientHeight,
+      panelCss: panel ? getComputedStyle(panel).scrollbarWidth : null,
+    };
+  });
+  check(
+    'Scrollbar disembunyikan (scroll tetap jalan)',
+    bars.htmlCss === 'none' &&
+      bars.bodyCss === 'none' &&
+      bars.gutter === 0 &&
+      bars.bisaScroll &&
+      bars.panelCss === 'none',
+    `html=${bars.htmlCss}, body=${bars.bodyCss}, batang halaman=${bars.gutter}px, halaman bisa di-scroll=${bars.bisaScroll}, panel rincian=${bars.panelCss}`,
+  );
+
   await page.getByPlaceholder('cth: Bu Rina - Bandung').fill('Bu Rina - Bandung');
   await page.getByRole('button', { name: /Simpan ke Riwayat/ }).click();
   await page.waitForSelector('text=Order tersimpan di riwayat');

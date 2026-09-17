@@ -93,18 +93,25 @@ input[type='number'] {
   color: var(--color-cocoa-900);
 }
 
-/* scrollbar ramping untuk daftar panjang */
-.scroll-slim {
-  scrollbar-width: thin;
-  scrollbar-color: var(--color-gold-600) transparent;
+/* ------------------------------------------------------------------
+   Scrollbar disembunyikan
+   Scrollnya sendiri tetap jalan (swipe, roda mouse, keyboard, PageDown),
+   hanya batangnya yang tidak ditampilkan. Efek sampingnya: lebar konten
+   tidak bergeser saat daftar pendek/panjang bergantian.
+   ------------------------------------------------------------------ */
+* {
+  scrollbar-width: none; /* Firefox */
 }
-.scroll-slim::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+*::-webkit-scrollbar {
+  /* Chromium & WebKit (Safari/iOS) */
+  display: none;
+  width: 0;
+  height: 0;
 }
-.scroll-slim::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, var(--color-gold-500), var(--color-gold-700));
-  border-radius: 999px;
+
+/* Penanda area yang memang bisa di-scroll (mis. panel rincian order). */
+.scroll-hide {
+  scrollbar-width: none;
 }
 
 /* ------------------------------------------------------------------
