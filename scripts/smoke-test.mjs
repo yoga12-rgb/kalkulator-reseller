@@ -261,7 +261,16 @@ try {
       kanvasWarna: kanvas.backgroundColor,
       kanvasAdaGradasi: /gradient/.test(kanvas.backgroundImage),
       bodyAdaGradasi: /gradient/.test(getComputedStyle(document.body).backgroundImage),
-      selubung: getComputedStyle(nav, '::after').content,
+      bibir: (() => {
+        const gaya = getComputedStyle(nav, '::after');
+        return {
+          konten: gaya.content,
+          posisi: gaya.position,
+          bawah: parseFloat(gaya.bottom),
+          tinggi: parseFloat(gaya.height),
+          warna: gaya.backgroundColor,
+        };
+      })(),
     };
   }, bawahPita);
   const jepretPita = async (y, tinggi, nama) => {
@@ -283,10 +292,17 @@ try {
     selisihPita <= 6,
     `tepi tab bar ${warnaRgb(tepiBar)}, pita ${warnaRgb(isiPita)}, selisih maks ${selisihPita.toFixed(1)}`,
   );
+  const selisihTepi = Math.max(...[0, 1, 2].map((i) => Math.abs(tepiBar[i] - [28, 14, 7][i])));
   check(
-    'Selubung `::after` tidak dipakai lagi (elemen `fixed` terpotong di tepi layout)',
-    pita.selubung === 'none',
-    `content ::after = ${pita.selubung}`,
+    'Bibir bawah tab bar rata #1c0e07 & tidak keluar dari kotak bar',
+    pita.bibir.konten !== 'none' &&
+      pita.bibir.posisi === 'absolute' &&
+      pita.bibir.bawah === 0 &&
+      pita.bibir.tinggi > 0 &&
+      pita.bibir.tinggi <= 4 &&
+      pita.bibir.warna === 'rgb(28, 14, 7)' &&
+      selisihTepi <= 2,
+    `::after ${pita.bibir.tinggi}px @bottom=${pita.bibir.bawah} warna=${pita.bibir.warna}, tepi terukur ${warnaRgb(tepiBar)} (selisih ${selisihTepi.toFixed(1)} dari #1c0e07)`,
   );
   check(
     'Kanvas halaman rata & memakai warna tepi tab bar #1c0e07',

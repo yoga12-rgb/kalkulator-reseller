@@ -167,22 +167,26 @@ otomatis pada muat ulang berikutnya.
   toolbar tidak punya alasan berubah, jadi tab bar (`fixed bottom-0`, selebar `max-w-md` di
   tengah) tetap diam. Tab bar sengaja dibiarkan `fixed`, bukan `sticky` di dalam aliran shell:
   `fixed` dijangkarkan ke tepi paling bawah yang dicapai layout.
-  **Pita bawah di iOS standalone** (terukur di iPhone XR lewat panel diagnostik): layar 896px,
-  `innerHeight`/`100dvh` 848px, `100vh` 896px — konten digambar dari paling atas layar, tapi kotak
-  dokumen berhenti setinggi status bar (48px) di atas dasar layar, dan tab bar menempel dasar kotak
-  itu. Jalur 48px sisanya **dilukis kanvas halaman**; karena `html` dulu tanpa latar, latar `body`
-  ikut dipropagasikan ke kanvas dan lapisan gradasinya (ukuran = kotak body) terulang di situ —
-  pita cokelat terang yang membuat tab bar terlihat mengambang. Perbaikannya dua jaring:
-  1. `html` diberi latar rata `#1c0e07` + `var(--noise)` yang sama seperti tab bar, jadi kanvas di
-     bawah kotak dokumen tampil sewarna tepi bawah bar — diuji lewat piksel screenshot di
-     `npm run smoke`, dan di browser biasa jalur ini memang tidak terlihat;
-  2. `body` memakai `background-repeat: no-repeat`, sehingga lapisan gradasinya tidak akan pernah
-     terulang di jalur itu walaupun latar `html` hilang/tertimpa.
-  Gradasi tab bar sengaja berakhir di `#251309` supaya setelah lapisan gelap `rgba(0, 0, 0, 0.25)`
-  tepinya tampil `#1c0e07` — sama dengan `background-color` `body`, kanvas `html`, dan
-  `background_color` manifest. Selubung `.tabbar::after` yang dulu dipakai untuk kasus ini sudah
-  **dihapus**: elemen `fixed` di iOS terpotong tepat di tepi layout viewport (tempat bar menempel),
-  jadi apa pun yang digambar di bawahnya tidak pernah terlihat.
+  **Pita dasar layar di iOS standalone** (terukur di iPhone XR lewat panel diagnostik): layar
+  896px, `innerHeight`/`100dvh` 848px, `100vh` 896px — konten digambar dari paling atas layar, tapi
+  kotak dokumen berhenti setinggi status bar (48px) di atas dasar layar, dan tab bar menempel dasar
+  kotak itu. Jalur 48px sisanya **dilukis sistem, di luar halaman**: sudah dibuktikan di perangkat
+  dengan dua percobaan — selubung `.tabbar::after` yang memperpanjang latar bar ke bawah (tidak
+  terlihat: elemen `fixed` terpotong di tepi layout viewport), dan mengecat kanvas `html` magenta
+  lewat tombol "Uji kanvas" (pitanya tetap gelap). Jadi jalur itu **tidak bisa diwarnai dari CSS,
+  hanya disamakan**. Tiga lapis:
+  1. `--warna-tepi` (`src/app.css`) jadi satu-satunya sumber warna tepi bawah: dipakai kanvas `html`,
+     dasar `body`, dan **bibir bawah tab bar** (`.tabbar::after`, 3px rata tanpa noise supaya tepi
+     bar presisi) — nilainya harus sama dengan `background_color` manifest. Diuji lewat piksel
+     screenshot (bandingkan pita vs tepi bar) di `npm run smoke`;
+  2. `background_color` manifest (`#1c0e07`) untuk pita yang dilukis sistem. WebKit menyimpan manifest
+     saat ikon dipasang, jadi nilai ini baru terpakai pada ikon yang dipasang ulang (dan menghapus
+     ikon juga menghapus localStorage riwayat — jadi hindari kalau bisa);
+  3. panel diagnostik menampilkan **baris pembanding warna** (5 swatch bernomor, tepat di atas tab
+     bar): warna pita di perangkat dibaca dengan mata, lalu `--warna-tepi` + `background_color`
+     disetel ke nilai itu sehingga pita menyatu tanpa perlu memasang ulang ikon.
+  Gradasi tab bar berakhir di `#251309` supaya setelah lapisan gelap `rgba(0, 0, 0, 0.25)` tepinya
+  tampil `#1c0e07` di atas bibir 3px yang rata.
   Detail yang menyertainya: setiap ganti tab `main.scrollTop` direset lewat
   `$effect` (tab baru selalu mulai dari atas), padding bawah panel isi
   `calc(10rem + env(safe-area-inset-bottom))` — cukup untuk bar total 68px + tab bar 76px, dan
@@ -198,8 +202,10 @@ otomatis pada muat ulang berikutnya.
   sudah terpasang, karena ikon di layar utama tidak bisa dibuka dengan query tambahan. Tombol
   **Uji kanvas** mengecat kanvas `html` magenta: kalau pita di bawah tab bar ikut magenta, pita itu
   memang kanvas halaman (perbaikan warna kanvas berlaku); kalau tetap gelap, pita itu dilukis sistem
-  di luar halaman dan yang menyamakannya adalah `background_color` manifest (perlu pasang ulang
-  ikon). Tekan
+  di luar halaman dan yang menyamakannya adalah warna tepi bawah (`--warna-tepi` +
+  `background_color` manifest). Untuk kasus terakhir itu ada
+  **baris pembanding warna** (5 swatch bernomor) tepat di atas tab bar: sebut nomor yang paling sama
+  dengan pitanya. Tekan
   **Salin** untuk menyalin semua baris, atau **Tutup** (panel tidak muncul lagi di sesi itu).
   Dipakai kalau tab bar terlihat mengambang di iPhone. Kalau tidak diperlukan lagi, hapus
   `src/components/ViewportDebug.svelte` beserta pemakaiannya di `App.svelte`.

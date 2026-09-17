@@ -38,6 +38,21 @@
     ukur();
   }
 
+  /**
+   * Baris pembanding warna untuk pita di dasar layar. Di iOS pita itu dilukis
+   * **sistem** (di luar jangkauan CSS — terbukti karena kanvas magenta tidak
+   * mengubahnya), jadi warnanya hanya bisa dibaca dengan membandingkan langsung,
+   * lalu disamakan lewat `--warna-tepi` di `src/app.css` + `background_color`
+   * manifest.
+   */
+  const WARNA_UJI = [
+    { nama: '1', hex: '#000000' },
+    { nama: '2', hex: '#160b06' },
+    { nama: '3', hex: '#1c0e07' },
+    { nama: '4', hex: '#2c170e' },
+    { nama: '5', hex: '#3d2114' },
+  ];
+
   function ukur() {
     const html = document.documentElement;
     const vv = window.visualViewport;
@@ -119,6 +134,23 @@
   <div bind:this={safeBottomProbe} style="padding-bottom: env(safe-area-inset-bottom);"></div>
 </div>
 
+<!-- Pembanding warna pita bawah: duduk tepat di atas tab bar supaya bisa dibandingkan
+     langsung dengan pita yang dilukis sistem di dasar layar. Pita itu tidak bisa
+     diwarnai dari CSS, jadi warnanya dibaca dengan mata lalu disamakan lewat
+     `--warna-tepi` (src/app.css) + `background_color` manifest. -->
+<div
+  class="fixed inset-x-0 z-40"
+  style="bottom: calc(7.5rem + env(safe-area-inset-bottom));"
+  aria-label="Pembanding warna tepi bawah"
+>
+  {#each WARNA_UJI as warna}
+    <div class="flex h-6 items-center justify-between px-3" style="background: {warna.hex};">
+      <span class="text-[9px] font-bold" style="color: rgba(255, 236, 190, 0.65);">{warna.nama}</span>
+      <span class="text-[9px]" style="color: rgba(255, 236, 190, 0.4);">{warna.hex}</span>
+    </div>
+  {/each}
+</div>
+
 <section
   class="panel-raised fixed right-2 left-2 z-50 rounded-xl border border-gold-500/50 px-3 py-2 text-[11px] text-gold-100 shadow-xl"
   style="top: max(0.5rem, env(safe-area-inset-top)); font-family: var(--font-mono);"
@@ -144,4 +176,7 @@
       <span class="font-bold">{nilai}</span>
     </div>
   {/each}
+  <p class="mt-1 text-[9px] leading-snug text-gold-200/70">
+    Pita di dasar layar: sebut nomor baris warna di atas tab bar yang paling sama.
+  </p>
 </section>

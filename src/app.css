@@ -39,6 +39,11 @@
    Dasar
    ------------------------------------------------------------------ */
 :root {
+  /* Warna tepi bawah layar — dipakai kanvas `html`, dasar `body`, dan bibir bawah
+     tab bar. Harus sama dengan `background_color` manifest di `vite.config.js`:
+     di iOS PWA standalone sebagian area dasar layar dilukis **sistem** (di luar
+     jangkauan CSS), jadi jejaknya hanya bisa "disamakan", bukan diwarnai. */
+  --warna-tepi: #1c0e07;
   --noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.10'/%3E%3C/svg%3E");
   color-scheme: dark;
   -webkit-tap-highlight-color: transparent;
@@ -63,13 +68,14 @@ body {
    (ukurannya = kotak body, ±848px) **terulang** di situ — pita terang yang bikin
    tab bar terlihat mengambang.
 
-   Karena itu kanvas di sini dibuat rata: warna tepi bawah tab bar (#1c0e07) +
-   noise yang sama seperti tab bar, jadi tepi bawah bar menyatu dengan dasar layar
-   di semua perangkat (iOS maupun browser biasa, yang tidak melihat jalur ini).
+   Karena itu kanvas di sini dibuat rata: warna tepi bawah tab bar (#1c0e07) tanpa
+   gradasi maupun noise, jadi sama persis dengan bibir bawah tab bar (`.tabbar::after`)
+   dan dengan `background_color` manifest. Di iOS yang pitanya dilukis sistem, CSS ini
+   tidak berpengaruh (lihat catatan `--warna-tepi`); di browser biasa jalur ini tidak
+   terlihat sama sekali.
    ------------------------------------------------------------------ */
 html {
-  background-color: #1c0e07;
-  background-image: var(--noise);
+  background-color: var(--warna-tepi);
 }
 
 /* ------------------------------------------------------------------
@@ -103,9 +109,9 @@ body {
   margin: 0;
   font-family: var(--font-body);
   color: var(--color-paper-100);
-  /* Warna dasar halaman = warna tepi bawah tab bar (#1c0e07), sama dengan kanvas
-     `html` (lihat aturan `html` di atas) dan `background_color` manifest. */
-  background-color: #1c0e07;
+  /* Warna dasar halaman = `--warna-tepi`, sama dengan kanvas `html` dan
+     `background_color` manifest (lihat komentar `--warna-tepi` di atas). */
+  background-color: var(--warna-tepi);
   /* Lapisan gradasi di bawah ini berukuran kotak body. `no-repeat` menahan lapisan
      itu supaya tidak pernah terulang di jalur kanvas (kasus iOS di atas) — jaring
      kedua kalau suatu saat latar `html` hilang/tertimpa. */
@@ -482,11 +488,23 @@ input[type='number'] {
     border-top: 1px solid rgba(255, 214, 124, 0.22);
     box-shadow: 0 -12px 24px -16px rgba(0, 0, 0, 1), inset 0 1px 0 rgba(255, 255, 255, 0.12);
   }
-  /* Catatan: tidak ada selubung `::after` di bawah tab bar. Elemen `fixed` di iOS
-     terpotong tepat di tepi layout viewport — tempat tab bar menempel — jadi apa
-     pun yang digambar di bawahnya tidak pernah terlihat (sudah dibuktikan di
-     perangkat). Jalur di bawah kotak dokumen dilukis kanvas `html`, yang diatur
-     sewarna tepi bawah tab bar (lihat aturan `html` di atas). */
+  /* Bibir bawah tab bar: 3px terakhir dibuat rata `--warna-tepi` **tanpa noise**,
+     jadi tepi bawah bar tampil sama persis dengan apa pun yang ada di bawahnya
+     (kanvas halaman, atau pita yang dilukis sistem di iOS PWA standalone).
+     Catatan: ini *di dalam* kotak bar — beda dengan selubung `::after` lama yang
+     memperpanjang latar ke bawah melewati kotak bar; elemen `fixed` di iOS
+     terpotong tepat di tepi layout viewport, jadi selubung itu tidak pernah terlihat
+     dan sudah dihapus. */
+  .tabbar::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    background: var(--warna-tepi);
+    pointer-events: none;
+  }
   .tab-btn {
     flex: 1;
     display: flex;
